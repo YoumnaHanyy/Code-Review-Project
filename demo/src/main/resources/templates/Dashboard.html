@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Advanced Code Review Dashboard</title>
+  <link rel="stylesheet" href="../static/Dashboard.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+<body>
+    <header>
+        <div class="logo">
+            <i class="fas fa-code-branch"></i>
+            <span>PRTracker</span>
+          </div>
+          <nav>
+            <a href="#" class="active">Dashboard</a>
+            <a href="#">Pull Requests</a>
+            <a href="#">Team</a>
+            <a href="#">Statistics</a>
+            <a href="#">Settings</a>
+          </nav>
+          <div class="theme-toggle" id="themeToggle">
+            <i class="fas fa-moon"></i>
+          </div>
+        </header>
+      
+        <div class="container page-content">
+          <div class="greeting">
+            <h1><i class="fas fa-chart-line"></i> Dashboard Overview</h1>
+            <p>Welcome back! Here's what's happening with your pull requests.</p>
+          </div>
+      
+          <div class="stats">
+            <div class="stat-card">
+              <div class="icon"><i class="fas fa-code-pull-request"></i></div>
+              <h2>78</h2>
+              <p>Total PRs</p>
+              <span class="trend up">+12% <i class="fas fa-arrow-up"></i></span>
+            </div>
+            <div class="stat-card">
+              <div class="icon"><i class="fas fa-check-circle"></i></div>
+              <h2>43</h2>
+              <p>Approved</p>
+              <span class="trend up">+8% <i class="fas fa-arrow-up"></i></span>
+            </div>
+            <div class="stat-card">
+              <div class="icon"><i class="fas fa-clock"></i></div>
+              <h2>21</h2>
+              <p>Pending Review</p>
+              <span class="trend down">-5% <i class="fas fa-arrow-down"></i></span>
+            </div>
+            <div class="stat-card">
+              <div class="icon"><i class="fas fa-exclamation-circle"></i></div>
+              <h2>14</h2>
+              <p>Changes Requested</p>
+              <span class="trend up">+3% <i class="fas fa-arrow-up"></i></span>
+            </div>
+          </div>
+      
+          <div class="tabs">
+            <button class="active"><i class="fas fa-stream"></i> All PRs <span class="count">78</span></button>
+            <button><i class="fas fa-check-circle"></i> Approved <span class="count">43</span></button>
+            <button><i class="fas fa-clock"></i> Pending <span class="count">21</span></button>
+            <button><i class="fas fa-comment-dots"></i> Changes <span class="count">14</span></button>
+            <button><i class="fas fa-times-circle"></i> Rejected <span class="count">0</span></button>
+          </div>
+      
+          <div class="search-filter">
+            <div class="search-wrapper">
+              <i class="fas fa-search"></i>
+              <input type="text" placeholder="Search pull requests...">
+            </div>
+            <div class="filter-group">
+              <select>
+                <option>All Repositories</option>
+                <option>Frontend</option>
+                <option>Backend</option>
+                <option>Mobile App</option>
+              </select>
+              <select>
+                <option>All Authors</option>
+                <option>John Doe</option>
+                <option>Jane Smith</option>
+                <option>Mike Johnson</option>
+              </select>
+              <button class="action-btn"><i class="fas fa-filter"></i> More Filters</button>
+            </div>
+          </div>
+      
+          <div class="pr-list">
+            <div class="pr-item approved">
+              <div class="pr-content">
+                <h3>Implement new authentication flow with OAuth 2.0</h3>
+                <div class="description">
+                  This PR implements a comprehensive authentication system using OAuth 2.0 protocol with support for multiple providers.
+                </div>
+                <div class="meta">
+                  <div class="meta-item"><i class="fas fa-code-branch"></i> Frontend</div>
+                  <div class="meta-item"><i class="fas fa-calendar"></i> Updated 2 hours ago</div>
+                  <div class="meta-item"><i class="fas fa-code"></i> 28 files changed</div>
+                  <div class="meta-item">
+                    <div class="avatar-group">
+                      <div class="avatar">JD</div>
+                      <div class="avatar">MS</div>
+                      <div class="avatar">+2</div>
+                    </div>
+                  </div>
+                  <div class="meta-item">
+                    <span class="badge approved"><i class="fas fa-check-circle"></i> Approved</span>
+                  </div>
+                </div>
+              </div>
+              <div class="pr-actions">
+                <div class="action success"><i class="fas fa-code-merge"></i></div>
+                <div class="action"><i class="fas fa-eye"></i></div>
+                <div class="action"><i class="fas fa-comment"></i></div>
+              </div>
+            </div>
+      
+            <div class="pr-item pending">
+              <div class="pr-content">
+                <h3>Add responsive design for dashboard components</h3>
+                <div class="description">
+                  This PR makes all dashboard components fully responsive and implements a mobile-first approach for better UX.
+                </div>
+                <div class="meta">
+                  <div class="meta-item"><i class="fas fa-code-branch"></i> Frontend</div>
+                  <div class="meta-item"><i class="fas fa-calendar"></i> Updated yesterday</div>
+                  <div class="meta-item"><i class="fas fa-code"></i> 15 files changed</div>
+                  <div class="meta-item">
+                    <div class="avatar-group">
+                      <div class="avatar">JS</div>
+                      <div class="avatar">KL</div>
+                    </div>
+                  </div>
+                  <div class="meta-item">
+                    <span class="badge pending"><i class="fas fa-clock"></i> Pending</span>
+                  </div>
+                </div>
+              </div>
+              <div class="pr-actions">
+                <div class="action success"><i class="fas fa-check"></i></div>
+                <div class="action danger"><i class="fas fa-times"></i></div>
+                <div class="action"><i class="fas fa-eye"></i></div>
+              </div>
+            </div>
+      
+            <div class="pr-item changes">
+              <div class="pr-content">
+                <h3>Refactor API endpoints for better performance</h3>
+                <div class="description">
+                  This PR refactors the existing API endpoints to implement caching strategies and optimize database queries.
+                </div>
+                <div class="meta">
+                  <div class="meta-item"><i class="fas fa-code-branch"></i> Backend</div>
+                  <div class="meta-item"><i class="fas fa-calendar"></i> Updated 3 days ago</div>
+                  <div class="meta-item"><i class="fas fa-code"></i> 32 files changed</div>
+                  <div class="meta-item">
+                    <div class="avatar-group">
+                      <div class="avatar">RK</div>
+                    </div>
+                  </div>
+                  <div class="meta-item">
+                    <span class="badge changes"><i class="fas fa-comment-dots"></i> Changes Requested</span>
+                  </div>
+                </div>
+              </div>
+              <div class="pr-actions">
+                <div class="action"><i class="fas fa-edit"></i></div>
+                <div class="action"><i class="fas fa-eye"></i></div>
+                <div class="action"><i class="fas fa-comment"></i></div>
+              </div>
+            </div>
+          </div>
+      
+          <div class="timeline">
+            <h2>Recent Activity <span class="view-all">View All</span></h2>
+            <div class="timeline-items">
+              <div class="timeline-item success">
+                <div class="timeline-content">
+                  <div class="timeline-meta">
+                    <span>Today, 10:30 AM</span>
+                    <span>John Doe</span>
+                  </div>
+                  <div class="timeline-text">PR #124 "Add user profile settings page" was approved and merged</div>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-content">
+                  <div class="timeline-meta">
+                    <span>Today, 9:15 AM</span>
+                    <span>Jane Smith</span>
+                  </div>
+                  <div class="timeline-text">Requested changes on PR #128 "Implement dark mode toggle"</div>
+                </div>
+              </div>
+              <div class="timeline-item warning">
+                <div class="timeline-content">
+                  <div class="timeline-meta">
+                    <span>Yesterday, 4:45 PM</span>
+                    <span>Mike Johnson</span>
+                  </div>
+                  <div class="timeline-text">Added comments to PR #126 "Fix navigation bar on mobile devices"</div>
+                </div>
+              </div>
+              <div class="timeline-item success">
+                <div class="timeline-content">
+                  <div class="timeline-meta">
+                    <span>Yesterday, 2:20 PM</span>
+                    <span>Robert King</span>
+                  </div>
+                  <div class="timeline-text">PR #122 "Update documentation for API endpoints" was approved</div>
+                </div>
+              </div>
+            </div>
+          </div>
+      
+          <div class="team-section">
+            <h2>Team Performance</h2>
+            <div class="team-grid">
+              <div class="team-member">
+                <div class="team-avatar">JD</div>
+                <div class="team-name">John Doe</div>
+                <div class="team-role">Frontend Developer</div>
+                <div class="team-stats">
+                  <div class="team-stat">
+                    <div class="team-stat-value">12</div>
+                    <div class="team-stat-label">PRs</div>
+                  </div>
+                  <div class="team-stat">
+                    <div class="team-stat-value">8</div>
+                    <div class="team-stat-label">Merged</div>
+                  </div>
+                </div>
+              </div>
+              <div class="team-member">
+                <div class="team-avatar">JS</div>
+                <div class="team-name">Jane Smith</div>
+                <div class="team-role">Backend Developer</div>
+                <div class="team-stats">
+                  <div class="team-stat">
+                    <div class="team-stat-value">15</div>
+                    <div class="team-stat-label">PRs</div>
+                  </div>
+                  <div class="team-stat">
+                    <div class="team-stat-value">13</div>
+                    <div class="team-stat-label">Merged</div>
+                  </div>
+                </div>
+              </div>
+              <div class="team-member">
+                <div class="team-avatar">MJ</div>
+                <div class="team-name">Mike Johnson</div>
+                <div class="team-role">Full-Stack Developer</div>
+                <div class="team-stats">
+                  <div class="team-stat">
+                    <div class="team-stat-value">9</div>
+                    <div class="team-stat-label">PRs</div>
+                  </div>
+                  <div class="team-stat">
+                    <div class="team-stat-value">7</div>
+                    <div class="team-stat-label">Merged</div>
+                  </div>
+                </div>
+              </div>
+              <div class="team-member">
+                <div class="team-avatar">RK</div>
+                <div class="team-name">Robert King</div>
+                <div class="team-role">DevOps Engineer</div>
+                <div class="team-stats">
+                  <div class="team-stat">
+                    <div class="team-stat-value">11</div>
+                    <div class="team-stat-label">PRs</div>
+                  </div>
+                  <div class="team-stat">
+                    <div class="team-stat-value">10</div>
+                    <div class="team-stat-label">Merged</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="chart-section">
+            <h2>Pull Request Analytics</h2>
+            <div class="chart-grid">
+              <div class="chart-card">
+                <h3>PR Resolution Time</h3>
+                <div class="chart-placeholder">
+                  <i class="fas fa-chart-line"></i>
+                  <p>Chart showing average time to resolve PRs</p>
+                </div>
+              </div>
+              <div class="chart-card">
+                <h3>PR Distribution By Type</h3>
+                <div class="chart-placeholder">
+                  <i class="fas fa-chart-pie"></i>
+                  <p>Chart showing PR distribution by type</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <footer>
+            <div class="footer-content">
+              <div class="copyright">
+                <p>&copy; 2025 PRTracker. All rights reserved.</p>
+              </div>
+              <div class="footer-links">
+                <a href="#">Help</a>
+                <a href="#">Documentation</a>
+                <a href="#">API</a>
+                <a href="#">Contact</a>
+              </div>
+            </div>
+          </footer>
+        </div>
+      
+  <script src="../static/Dashboard.js"></script>
+</body>
+</html>
