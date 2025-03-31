@@ -76,8 +76,6 @@ function createNotificationsContainer() {
     document.body.appendChild(container);
     return container;
 }
-
-// Reaction System - Facebook Style
 function setupReactionSystem() {
     // Add the reaction styles if they don't exist
     addReactionStyles();
@@ -90,12 +88,13 @@ function setupReactionSystem() {
         button.replaceWith(newButton);
         
         // Initialize button state
-        newButton.innerHTML = '<i class="far fa-thumbs-up"></i> <span class="reaction-text">Like</span>';
+        newButton.innerHTML = '<i class="far fa-thumbs-up"></i> <span class="reaction-text">React</span>';
         newButton.dataset.postId = postId;
         
-        // Create reaction popup
+        // Create reaction popup and store reference on the button
         const reactionPopup = createReactionPopup();
-        newButton.appendChild(reactionPopup);
+        document.body.appendChild(reactionPopup);
+        newButton.reactionPopup = reactionPopup;
         
         // State variables
         let isMouseOverButton = false;
@@ -110,10 +109,10 @@ function setupReactionSystem() {
             
             // Get button position
             const rect = newButton.getBoundingClientRect();
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             
-            // Position the popup above the button
-            reactionPopup.style.bottom = `${window.innerHeight - rect.top + scrollTop + 10}px`;
+            // Position the popup much higher above the button (increased to -40)
+            reactionPopup.style.bottom = 'auto';
+            reactionPopup.style.top = `${rect.top - reactionPopup.offsetHeight - 40}px`;
             reactionPopup.style.left = `${rect.left}px`;
             
             // Show with animation
@@ -146,13 +145,12 @@ function setupReactionSystem() {
         
         newButton.addEventListener('mouseleave', () => {
             isMouseOverButton = false;
-            hidePopup();
+            setTimeout(() => hidePopup(), 100);
         });
         
         // Popup events
         reactionPopup.addEventListener('mouseenter', () => {
             isMouseOverPopup = true;
-            clearTimeout(hideTimeout);
         });
         
         reactionPopup.addEventListener('mouseleave', () => {
@@ -165,7 +163,14 @@ function setupReactionSystem() {
             option.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const reactionType = option.dataset.type;
-                handleReactionSelection(newButton, postId, reactionType);
+                
+                // Toggle reaction if same as current
+                if (reactionType === newButton.dataset.currentReaction) {
+                    handleReactionSelection(newButton, postId, null); // Remove reaction
+                } else {
+                    handleReactionSelection(newButton, postId, reactionType); // Set new reaction
+                }
+                
                 hidePopup();
             });
             
@@ -185,11 +190,18 @@ function setupReactionSystem() {
             });
         });
         
-        // Main button click
+        // Main button click - toggle current reaction or set default
         newButton.addEventListener('click', (e) => {
             if (!e.target.closest('.reaction-option')) {
                 const currentReaction = newButton.dataset.currentReaction;
-                handleReactionSelection(newButton, postId, currentReaction ? null : 'like');
+                
+                if (currentReaction) {
+                    // If already has a reaction, clicking again will remove it
+                    handleReactionSelection(newButton, postId, null);
+                } else {
+                    // Set default reaction (helpful)
+                    handleReactionSelection(newButton, postId, 'helpful');
+                }
             }
         });
     });
@@ -208,43 +220,32 @@ function handleReactionSelection(button, postId, reactionType) {
         applyReaction(button, reactionType);
         updateReactionCount(postId, reactionType, 1);
         button.dataset.currentReaction = reactionType;
+        
+        // Show animation for the selected reaction
+        showReactionAnimation(button, reactionType);
     } else {
         resetReaction(button);
         delete button.dataset.currentReaction;
-    }
-    
-    // Show animation for the selected reaction
-    if (reactionType) {
-        showReactionAnimation(button, reactionType);
     }
 }
 
 function applyReaction(button, reactionType) {
     const iconMap = {
-        like: 'fa-thumbs-up',
-        love: 'fa-heart',
-        haha: 'fa-laugh-squint',
-        wow: 'fa-surprise',
-        sad: 'fa-sad-tear',
-        angry: 'fa-angry'
+        helpful: 'fa-thumbs-up',
+        nochanges: 'fa-check-circle',
+        needswork: 'fa-tools'
     };
     
     const textMap = {
-        like: 'Like',
-        love: 'Love',
-        haha: 'Haha',
-        wow: 'Wow',
-        sad: 'Sad',
-        angry: 'Angry'
+        helpful: 'Helpful',
+        nochanges: 'No Changes',
+        needswork: 'Changes Needed'
     };
     
     const colorMap = {
-        like: '#1877f2',
-        love: '#f33e58',
-        haha: '#f7b125',
-        wow: '#f7b125',
-        sad: '#f7b125',
-        angry: '#e9710f'
+        helpful: '#4267B2',  // Blue
+        nochanges: '#1DB954', // Green
+        needswork: '#E4405F'   // Red
     };
     
     button.innerHTML = `<i class="fas ${iconMap[reactionType]}"></i> <span class="reaction-text">${textMap[reactionType]}</span>`;
@@ -252,21 +253,24 @@ function applyReaction(button, reactionType) {
 }
 
 function resetReaction(button) {
-    button.innerHTML = '<i class="far fa-thumbs-up"></i> <span class="reaction-text">Like</span>';
+    button.innerHTML = '<i class="far fa-thumbs-up"></i> <span class="reaction-text">React</span>';
     button.style.color = '';
 }
 
 function previewReaction(button, reactionType) {
     const iconMap = {
-        like: 'fa-thumbs-up',
-        love: 'fa-heart',
-        haha: 'fa-laugh-squint',
-        wow: 'fa-surprise',
-        sad: 'fa-sad-tear',
-        angry: 'fa-angry'
+        helpful: 'fa-thumbs-up',
+        nochanges: 'fa-check-circle',
+        needswork: 'fa-tools'
     };
     
-    button.innerHTML = `<i class="fas ${iconMap[reactionType]}"></i> <span class="reaction-text">${reactionType.charAt(0).toUpperCase() + reactionType.slice(1)}</span>`;
+    const textMap = {
+        helpful: 'Helpful',
+        nochanges: 'No Changes',
+        needswork: 'Changes Needed'
+    };
+    
+    button.innerHTML = `<i class="fas ${iconMap[reactionType]}"></i> <span class="reaction-text">${textMap[reactionType]}</span>`;
 }
 
 function resetReactionPreview(button) {
@@ -282,30 +286,20 @@ function createReactionPopup() {
     const popup = document.createElement('div');
     popup.className = 'reaction-popup';
     popup.style.display = 'none';
+    popup.style.position = 'fixed';
+    popup.style.zIndex = '1000';
     popup.innerHTML = `
-        <div class="reaction-option" data-type="like">
+        <div class="reaction-option" data-type="helpful">
             <i class="fas fa-thumbs-up"></i>
-            <span>Like</span>
+            <span>Helpful</span>
         </div>
-        <div class="reaction-option" data-type="love">
-            <i class="fas fa-heart"></i>
-            <span>Love</span>
+        <div class="reaction-option" data-type="nochanges">
+            <i class="fas fa-check-circle"></i>
+            <span>No Changes</span>
         </div>
-        <div class="reaction-option" data-type="haha">
-            <i class="fas fa-laugh-squint"></i>
-            <span>Haha</span>
-        </div>
-        <div class="reaction-option" data-type="wow">
-            <i class="fas fa-surprise"></i>
-            <span>Wow</span>
-        </div>
-        <div class="reaction-option" data-type="sad">
-            <i class="fas fa-sad-tear"></i>
-            <span>Sad</span>
-        </div>
-        <div class="reaction-option" data-type="angry">
-            <i class="fas fa-angry"></i>
-            <span>Angry</span>
+        <div class="reaction-option" data-type="needswork">
+            <i class="fas fa-tools"></i>
+            <span>Changes Needed</span>
         </div>
     `;
     return popup;
@@ -321,51 +315,26 @@ function updateReactionCount(postId, reactionType, increment) {
     // Parse existing counts
     const statsText = statsDiv.textContent;
     const counts = {
-        like: parseInt(statsText.match(/(\d+) Like/)?.[1] || statsText.match(/(\d+) Likes/)?.[1] || 0),
-        love: parseInt(statsText.match(/(\d+) Love/)?.[1] || 0),
-        haha: parseInt(statsText.match(/(\d+) Haha/)?.[1] || 0),
-        wow: parseInt(statsText.match(/(\d+) Wow/)?.[1] || 0),
-        sad: parseInt(statsText.match(/(\d+) Sad/)?.[1] || 0),
-        angry: parseInt(statsText.match(/(\d+) Angry/)?.[1] || 0),
+        helpful: parseInt(statsText.match(/(\d+) Helpful/)?.[1] || 0),
+        nochanges: parseInt(statsText.match(/(\d+) No Changes/)?.[1] || 0),
+        needswork: parseInt(statsText.match(/(\d+) Changes Needed/)?.[1] || 0),
         comments: parseInt(statsText.match(/(\d+) Comments/)?.[1] || 0),
-        shares: parseInt(statsText.match(/(\d+) Shares/)?.[1] || 0)
+        requests: parseInt(statsText.match(/(\d+) Requests/)?.[1] || 0)
     };
     
     // Update the count
     counts[reactionType] = Math.max(0, counts[reactionType] + increment);
     
-    // Get total reactions count
-    const totalReactions = Object.values(counts).slice(0, 6).reduce((a, b) => a + b, 0);
+    // Build the display text
+    const reactionParts = [];
+    if (counts.helpful > 0) reactionParts.push(`${counts.helpful} Helpful`);
+    if (counts.nochanges > 0) reactionParts.push(`${counts.nochanges} No Changes`);
+    if (counts.needswork > 0) reactionParts.push(`${counts.needswork} Changes Needed`);
     
-    // Update the stats text
-    if (totalReactions > 0) {
-        const topReactions = [];
-        if (counts.like > 0) topReactions.push({type: 'like', count: counts.like});
-        if (counts.love > 0) topReactions.push({type: 'love', count: counts.love});
-        if (counts.haha > 0) topReactions.push({type: 'haha', count: counts.haha});
-        if (counts.wow > 0) topReactions.push({type: 'wow', count: counts.wow});
-        if (counts.sad > 0) topReactions.push({type: 'sad', count: counts.sad});
-        if (counts.angry > 0) topReactions.push({type: 'angry', count: counts.angry});
-        
-        // Sort by count descending
-        topReactions.sort((a, b) => b.count - a.count);
-        
-        // Take top 3 reactions
-        const displayReactions = topReactions.slice(0, 3);
-        
-        // Build the reactions text
-        const reactionsText = displayReactions.length > 0 
-            ? `${totalReactions} ${totalReactions === 1 ? 'reaction' : 'reactions'}`
-            : '0 reactions';
-            
-        statsDiv.textContent = `${reactionsText} • ${counts.comments} Comments • ${counts.shares} Shares`;
-        
-        // Update reaction counters
-        updateReactionCounters(postCard, counts);
-    } else {
-        statsDiv.textContent = `0 reactions • ${counts.comments} Comments • ${counts.shares} Shares`;
-        updateReactionCounters(postCard, counts);
-    }
+    const reactionsText = reactionParts.length > 0 ? reactionParts.join(', ') : '0 Reactions';
+    statsDiv.textContent = `${reactionsText} • ${counts.comments} Comments • ${counts.requests} Requests`;
+    
+    updateReactionCounters(postCard, counts);
 }
 
 function updateReactionCounters(postCard, counts) {
@@ -376,46 +345,35 @@ function updateReactionCounters(postCard, counts) {
         postCard.querySelector('.post-stats').prepend(countersDiv);
     }
     
-    const totalReactions = Object.values(counts).slice(0, 6).reduce((a, b) => a + b, 0);
+    const totalReactions = counts.helpful + counts.nochanges + counts.needswork;
     
     if (totalReactions > 0) {
         countersDiv.innerHTML = '';
         
-        // Add reaction icons in order of count
-        const reactions = [
-            {type: 'like', count: counts.like},
-            {type: 'love', count: counts.love},
-            {type: 'haha', count: counts.haha},
-            {type: 'wow', count: counts.wow},
-            {type: 'sad', count: counts.sad},
-            {type: 'angry', count: counts.angry}
-        ].filter(r => r.count > 0)
-         .sort((a, b) => b.count - a.count)
-         .slice(0, 3); // Show max 3 reactions
-        
-        reactions.forEach(reaction => {
+        // Add reaction icons in order
+        if (counts.helpful > 0) {
             const counter = document.createElement('div');
-            counter.className = `reaction-counter ${reaction.type}`;
-            counter.innerHTML = `<i class="fas ${getReactionIcon(reaction.type)}"></i>`;
+            counter.className = 'reaction-counter helpful';
+            counter.innerHTML = `<i class="fas fa-thumbs-up"></i>${counts.helpful}`;
             countersDiv.appendChild(counter);
-        });
+        }
+        if (counts.nochanges > 0) {
+            const counter = document.createElement('div');
+            counter.className = 'reaction-counter no-changes';
+            counter.innerHTML = `<i class="fas fa-check-circle"></i>${counts.nochanges}`;
+            countersDiv.appendChild(counter);
+        }
+        if (counts.needswork > 0) {
+            const counter = document.createElement('div');
+            counter.className = 'reaction-counter needs-work';
+            counter.innerHTML = `<i class="fas fa-tools"></i>${counts.needswork}`;
+            countersDiv.appendChild(counter);
+        }
         
         countersDiv.style.display = 'flex';
     } else {
         countersDiv.style.display = 'none';
     }
-}
-
-function getReactionIcon(reactionType) {
-    const iconMap = {
-        like: 'fa-thumbs-up',
-        love: 'fa-heart',
-        haha: 'fa-laugh-squint',
-        wow: 'fa-surprise',
-        sad: 'fa-sad-tear',
-        angry: 'fa-angry'
-    };
-    return iconMap[reactionType];
 }
 
 function showReactionAnimation(button, reactionType) {
@@ -439,6 +397,15 @@ function showReactionAnimation(button, reactionType) {
     }, 1000);
 }
 
+function getReactionIcon(reactionType) {
+    const iconMap = {
+        helpful: 'fa-thumbs-up',
+        nochanges: 'fa-check-circle',
+        needswork: 'fa-tools'
+    };
+    return iconMap[reactionType];
+}
+
 function addReactionStyles() {
     if (document.getElementById('reaction-styles')) return;
     
@@ -451,6 +418,7 @@ function addReactionStyles() {
             align-items: center;
             gap: 5px;
             transition: all 0.2s;
+            cursor: pointer;
         }
         
         .action-btn:hover {
@@ -464,7 +432,7 @@ function addReactionStyles() {
         .reaction-popup {
             position: fixed;
             background: white;
-            border-radius: 50px;
+            border-radius: 20px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             padding: 8px;
             z-index: 1000;
@@ -480,63 +448,39 @@ function addReactionStyles() {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 8px;
+            padding: 8px 12px;
             cursor: pointer;
             transition: all 0.2s;
-            border-radius: 50%;
-            position: relative;
-            width: 40px;
-            height: 40px;
+            border-radius: 10px;
         }
         
         .reaction-option:hover {
-            transform: scale(1.3) translateY(-10px);
+            transform: scale(1.1);
+            background-color: rgba(0, 0, 0, 0.05);
         }
         
         .reaction-option i {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             margin-bottom: 4px;
         }
         
         .reaction-option span {
-            position: absolute;
-            bottom: -25px;
             font-size: 0.7rem;
             white-space: nowrap;
-            background: #333;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 10px;
-            opacity: 0;
-            transition: opacity 0.2s;
+            color: black; /* Added this line to make text color black */
+
         }
         
-        .reaction-option:hover span {
-            opacity: 1;
+        .reaction-option[data-type="helpful"] i {
+            color: #4267B2;
         }
         
-        .reaction-option[data-type="like"] i {
-            color: #1877f2;
+        .reaction-option[data-type="nochanges"] i {
+            color: #1DB954;
         }
         
-        .reaction-option[data-type="love"] i {
-            color: #f33e58;
-        }
-        
-        .reaction-option[data-type="haha"] i {
-            color: #f7b125;
-        }
-        
-        .reaction-option[data-type="wow"] i {
-            color: #f7b125;
-        }
-        
-        .reaction-option[data-type="sad"] i {
-            color: #f7b125;
-        }
-        
-        .reaction-option[data-type="angry"] i {
-            color: #e9710f;
+        .reaction-option[data-type="needswork"] i {
+            color: #E4405F;
         }
         
         .reaction-counters {
@@ -546,34 +490,26 @@ function addReactionStyles() {
         }
         
         .reaction-counter {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.8rem;
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 0.6rem;
+            gap: 4px;
         }
         
-        .reaction-counter.like {
-            background: #1877f2;
+        .reaction-counter.helpful {
+            background: #4267B2;
             color: white;
         }
         
-        .reaction-counter.love {
-            background: #f33e58;
+        .reaction-counter.no-changes {
+            background: #1DB954;
             color: white;
         }
         
-        .reaction-counter.haha,
-        .reaction-counter.wow,
-        .reaction-counter.sad {
-            background: #f7b125;
-            color: white;
-        }
-        
-        .reaction-counter.angry {
-            background: #e9710f;
+        .reaction-counter.needs-work {
+            background: #E4405F;
             color: white;
         }
         
@@ -587,22 +523,16 @@ function addReactionStyles() {
             transform: translateY(0) scale(1);
         }
         
-        .reaction-animation.like {
-            color: #1877f2;
+        .reaction-animation.helpful {
+            color: #4267B2;
         }
         
-        .reaction-animation.love {
-            color: #f33e58;
+        .reaction-animation.nochanges {
+            color: #1DB954;
         }
         
-        .reaction-animation.haha,
-        .reaction-animation.wow,
-        .reaction-animation.sad {
-            color: #f7b125;
-        }
-        
-        .reaction-animation.angry {
-            color: #e9710f;
+        .reaction-animation.needswork {
+            color: #E4405F;
         }
     `;
     document.head.appendChild(style);
