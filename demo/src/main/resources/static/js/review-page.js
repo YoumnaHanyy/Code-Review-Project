@@ -1,32 +1,5 @@
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Theme toggle functionality
-    const themeToggle = document.getElementById('theme-toggle');
-    const body = document.body;
-    const themeIcon = themeToggle.querySelector('i');
-
-    // Check for saved theme preference
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        body.classList.add('dark-theme');
-        themeIcon.classList.remove('fa-moon');
-        themeIcon.classList.add('fa-sun');
-    }
-
-    // Toggle theme when button is clicked
-    themeToggle.addEventListener('click', function() {
-        body.classList.toggle('dark-theme');
-        
-        if (body.classList.contains('dark-theme')) {
-            localStorage.setItem('theme', 'dark');
-            themeIcon.classList.remove('fa-moon');
-            themeIcon.classList.add('fa-sun');
-        } else {
-            localStorage.setItem('theme', 'light');
-            themeIcon.classList.remove('fa-sun');
-            themeIcon.classList.add('fa-moon');
-        }
-    });
-
     // Post form interactions
     const postForm = document.querySelector('.post-form');
     const postInput = document.querySelector('.post-input');
@@ -1267,3 +1240,190 @@ document.addEventListener('DOMContentLoaded', function() {
         
        
     } })
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+        
+        themeToggle.addEventListener('click', function() {
+            body.classList.toggle('dark-mode');
+            const icon = themeToggle.querySelector('i');
+            
+            if (body.classList.contains('dark-mode')) {
+                icon.classList.replace('fa-moon', 'fa-sun');
+            } else {
+                icon.classList.replace('fa-sun', 'fa-moon');
+            }
+        });
+    
+        // Comments/messages section functionality
+        setupCommentsSection();
+        
+        // Like button functionality
+        setupLikeButtons();
+        
+        // Request modification button functionality
+        setupRequestButtons();
+    });
+    
+    function setupCommentsSection() {
+        // Find all comment buttons and add click event listeners
+        const commentButtons = document.querySelectorAll('[id^="comment-btn-"]');
+        
+        commentButtons.forEach(button => {
+            const postId = button.id.split('-').pop();
+            const commentsSection = document.getElementById(`comments-${postId}`);
+            
+            button.addEventListener('click', function() {
+                // Toggle comments section visibility
+                if (commentsSection.style.display === 'none') {
+                    commentsSection.style.display = 'block';
+                    this.classList.add('active');
+                } else {
+                    commentsSection.style.display = 'none';
+                    this.classList.remove('active');
+                }
+            });
+            
+            // Setup comment submission for this post
+            setupCommentSubmit(postId);
+        });
+    }
+    
+    function setupCommentSubmit(postId) {
+        const commentsSection = document.getElementById(`comments-${postId}`);
+        const commentForm = commentsSection.querySelector('.comment-form');
+        const commentInput = commentForm.querySelector('.comment-input');
+        const submitButton = commentForm.querySelector('.comment-submit');
+        
+        // Handle submit button click
+        submitButton.addEventListener('click', function() {
+            submitComment(postId, commentInput.value);
+        });
+        
+        // Handle pressing Enter in the input field
+        commentInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitComment(postId, commentInput.value);
+            }
+        });
+    }
+    
+    function submitComment(postId, commentText) {
+        if (!commentText.trim()) return; // Don't submit empty comments
+        
+        const commentsSection = document.getElementById(`comments-${postId}`);
+        const commentInput = commentsSection.querySelector('.comment-input');
+        
+        // Create new comment element
+        const newComment = document.createElement('div');
+        newComment.className = 'comment';
+        newComment.innerHTML = `
+            <img src="/api/placeholder/320/320" alt="Your profile">
+            <div class="comment-content">
+                <div class="comment-user">You</div>
+                <div class="comment-text">${escapeHTML(commentText)}</div>
+                <div class="comment-actions">
+                    <div class="comment-action">Like</div>
+                    <div class="comment-action">Reply</div>
+                    <div class="comment-action">Just now</div>
+                </div>
+            </div>
+        `;
+        
+        // Insert new comment before the next comment form
+        commentsSection.appendChild(newComment);
+        
+        // Clear the input field
+        commentInput.value = '';
+        
+        // Update comment count in post stats
+        updateCommentCount(postId, 1);
+    }
+    
+    function updateCommentCount(postId, increment) {
+        const postCard = document.getElementById(`comments-${postId}`).closest('.post-card');
+        const statsDiv = postCard.querySelector('.post-stats div:first-child');
+        
+        // Parse the current stats text
+        const statsText = statsDiv.textContent;
+        const commentCountMatch = statsText.match(/(\d+) Comments/);
+        
+        if (commentCountMatch) {
+            const currentCount = parseInt(commentCountMatch[1]);
+            const newCount = currentCount + increment;
+            
+            // Replace the old count with the new count
+            statsDiv.textContent = statsText.replace(
+                `${currentCount} Comments`, 
+                `${newCount} Comments`
+            );
+        }
+    }
+    
+    function setupLikeButtons() {
+        const likeButtons = document.querySelectorAll('[id^="like-btn-"]');
+        
+        likeButtons.forEach(button => {
+            const postId = button.id.split('-').pop();
+            
+            button.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                
+                if (icon.classList.contains('far')) {
+                    // Like the post
+                    icon.classList.replace('far', 'fas');
+                    this.classList.add('active');
+                    updateLikeCount(postId, 1);
+                } else {
+                    // Unlike the post
+                    icon.classList.replace('fas', 'far');
+                    this.classList.remove('active');
+                    updateLikeCount(postId, -1);
+                }
+            });
+        });
+    }
+    
+    function updateLikeCount(postId, increment) {
+        const commentsSection = document.getElementById(`comments-${postId}`);
+        const postCard = commentsSection.closest('.post-card');
+        const statsDiv = postCard.querySelector('.post-stats div:first-child');
+        
+        // Parse the current stats text
+        const statsText = statsDiv.textContent;
+        const likeCountMatch = statsText.match(/(\d+) Likes/);
+        
+        if (likeCountMatch) {
+            const currentCount = parseInt(likeCountMatch[1]);
+            const newCount = currentCount + increment;
+            
+            // Replace the old count with the new count
+            statsDiv.textContent = statsText.replace(
+                `${currentCount} Likes`, 
+                `${newCount} Likes`
+            );
+        }
+    }
+    
+    function setupRequestButtons() {
+        const requestButtons = document.querySelectorAll('[id^="request-btn-"]');
+        
+        requestButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Simple modal or alert for demonstration
+                alert("Feature coming soon: You'll be able to request specific code modifications here!");
+            });
+        });
+    }
+    
+    // Helper function to escape HTML to prevent XSS
+    function escapeHTML(str) {
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }

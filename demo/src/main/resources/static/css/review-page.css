@@ -66,6 +66,8 @@ header {
 .nav-links {
     display: flex;
     gap: 24px;
+    margin-right: 20px; /* This adds space between nav links and profile icon */
+
 }
 
 .nav-links a {
