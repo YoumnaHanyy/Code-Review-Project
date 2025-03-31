@@ -641,7 +641,9 @@ function addModalStyles() {
 }
 
 // Code Block Actions
+f// Code Block Actions - Fixed
 function setupCodeActions() {
+    // Copy buttons
     document.querySelectorAll('.code-action-btn:nth-child(1)').forEach(button => {
         button.addEventListener('click', function() {
             const codeBlock = this.closest('.code-block');
@@ -653,6 +655,7 @@ function setupCodeActions() {
         });
     });
 
+    // Expand buttons - Fixed with proper icon toggling
     document.querySelectorAll('.code-action-btn:nth-child(2)').forEach(button => {
         button.addEventListener('click', function() {
             const codeBlock = this.closest('.code-block');
@@ -660,15 +663,56 @@ function setupCodeActions() {
             const icon = this.querySelector('i');
             
             if (isExpanded) {
+                // Change to compress icon and add overlay
                 icon.classList.replace('fa-expand', 'fa-compress');
-                codeBlock.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                addCodeOverlay(codeBlock);
+                
+                // Scroll to show the expanded code
+                setTimeout(() => {
+                    codeBlock.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
             } else {
+                // Change back to expand icon and remove overlay
                 icon.classList.replace('fa-compress', 'fa-expand');
+                removeCodeOverlay();
             }
-            
-            showNotification(`Code ${isExpanded ? 'expanded' : 'collapsed'}`, 'info');
         });
     });
+}
+
+// Helper functions for code expansion
+function addCodeOverlay(codeBlock) {
+    // Remove any existing overlay first
+    removeCodeOverlay();
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'code-overlay';
+    overlay.innerHTML = '<button class="close-expanded-code"><i class="fas fa-times"></i></button>';
+    
+    overlay.addEventListener('click', (e) => {
+        if (e.target.classList.contains('code-overlay') || e.target.closest('.close-expanded-code')) {
+            const expandedBlock = document.querySelector('.code-block.expanded');
+            if (expandedBlock) {
+                expandedBlock.classList.remove('expanded');
+                const icon = expandedBlock.querySelector('.fa-compress');
+                if (icon) {
+                    icon.classList.replace('fa-compress', 'fa-expand');
+                }
+                removeCodeOverlay();
+            }
+        }
+    });
+    
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+}
+
+function removeCodeOverlay() {
+    const existingOverlay = document.querySelector('.code-overlay');
+    if (existingOverlay) {
+        existingOverlay.remove();
+    }
+    document.body.style.overflow = '';
 }
 
 // Post Filtering System
