@@ -1200,3 +1200,44 @@ header {
 .dark-theme .comments-section {
     border-top-color: #444;
 }
+/* Loading indicator styles */
+.loading-indicator {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.loading-indicator i {
+    margin-right: 8px;
+    color: var(--accent-color);
+}
+
+/* Post filtering animations */
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.post-card {
+    transition: all 0.3s ease;
+}
+
+/* Enhanced filter tabs */
+.filter-tabs {
+    position: sticky;
+    top: 80px;
+    z-index: 90;
+    background-color: var(--light-purple);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .filter-tabs {
+        top: 70px;
+    }
+}

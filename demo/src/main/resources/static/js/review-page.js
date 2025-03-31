@@ -1,631 +1,819 @@
-
 document.addEventListener('DOMContentLoaded', function() {
-    // Post form interactions
-    const postForm = document.querySelector('.post-form');
-    const postInput = document.querySelector('.post-input');
-    const postButton = document.querySelector('.post-btn');
-
-    postInput.addEventListener('focus', function() {
-        postForm.classList.add('active');
-    });
-
-    postInput.addEventListener('blur', function() {
-        if (postInput.value.trim() === '') {
-            postForm.classList.remove('active');
-        }
-    });
-
-    postButton.addEventListener('click', function() {
-        if (postInput.value.trim() !== '') {
-            showNotification('Post shared successfully!', 'success');
-            postInput.value = '';
-            postForm.classList.remove('active');
-        } else {
-            showNotification('Please write something before posting.', 'error');
-        }
-    });
-
-    // Code attachment button
-    const codeAttachBtn = document.querySelector('.attach-btn:nth-child(1)');
-    codeAttachBtn.addEventListener('click', function() {
-        showNotification('Code editor opened', 'info');
-        // Here you would typically open a code editor modal
-    });
-
-    // Image attachment button
-    const imageAttachBtn = document.querySelector('.attach-btn:nth-child(2)');
-    imageAttachBtn.addEventListener('click', function() {
-        showNotification('Image uploader opened', 'info');
-        // Here you would typically open an image upload modal
-    });
-
-    // Link attachment button
-    const linkAttachBtn = document.querySelector('.attach-btn:nth-child(3)');
-    linkAttachBtn.addEventListener('click', function() {
-        const url = prompt('Enter a URL:');
-        if (url) {
-            showNotification('Link added to your post', 'success');
-        }
-    });
-
-    // Gist attachment button
-    const gistAttachBtn = document.querySelector('.attach-btn:nth-child(4)');
-    gistAttachBtn.addEventListener('click', function() {
-        showNotification('Gist embedding opened', 'info');
-        // Here you would typically open a gist embedding modal
-    });
-
-    // Filter tabs functionality
-    const filterTabs = document.querySelectorAll('.filter-tab');
-    
-    filterTabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            // Remove active class from all tabs
-            filterTabs.forEach(t => t.classList.remove('active'));
-            
-            // Add active class to clicked tab
-            this.classList.add('active');
-            
-            showNotification(`Showing ${this.textContent} posts`, 'info');
-        });
-    });
-
-    // Post like, comment, and request buttons
-    setupPostInteractions('1');
-    setupPostInteractions('2');
-
-    // Code block copy buttons
-    const copyButtons = document.querySelectorAll('.code-action-btn:nth-child(1)');
-    
-    copyButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const codeBlock = this.closest('.code-block').querySelector('pre').textContent;
-            navigator.clipboard.writeText(codeBlock)
-                .then(() => {
-                    showNotification('Code copied to clipboard!', 'success');
-                })
-                .catch(() => {
-                    showNotification('Failed to copy code', 'error');
-                });
-        });
-    });
-
-    // Code block expand buttons
-    const expandButtons = document.querySelectorAll('.code-action-btn:nth-child(2)');
-    
-    expandButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const codeBlock = this.closest('.code-block');
-            codeBlock.classList.toggle('expanded');
-            
-            const icon = this.querySelector('i');
-            if (codeBlock.classList.contains('expanded')) {
-                icon.classList.remove('fa-expand');
-                icon.classList.add('fa-compress');
-                showNotification('Code expanded', 'info');
-            } else {
-                icon.classList.remove('fa-compress');
-                icon.classList.add('fa-expand');
-                showNotification('Code collapsed', 'info');
-            }
-        });
-    });
+    // Initialize all systems
+    setupReactionSystem();
+    setupCommentsSection();
+    setupRequestButtons();
+    setupFilterTabs();
+    setupCodeActions();
+    setupThemeToggle();
+    setupPostForm();
+    setupSearch();
+    setupNavigation();
+    setupSidebarMenu();
+    setupPostFiltering();
+    setupInfiniteScroll();
+    setupUserProfile();
+    setupFollowButtons();
+    setupPostMenu();
 
     // Challenge buttons
-    const challengeButtons = document.querySelectorAll('.challenge-btn');
-    
-    challengeButtons.forEach(button => {
+    document.querySelectorAll('.challenge-btn').forEach(button => {
         button.addEventListener('click', function() {
             const challengeTitle = this.closest('.challenge-card').querySelector('.challenge-title').textContent;
-            showNotification(`Starting ${challengeTitle}`, 'success');
+            showNotification(`Starting ${challengeTitle} challenge`, 'success');
         });
     });
+});
 
-    // Search functionality
-    const searchInput = document.querySelector('.search-bar input');
+// Notification System
+let notificationTimeout;
+function showNotification(message, type) {
+    clearTimeout(notificationTimeout);
     
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            const searchTerm = this.value.trim();
-            if (searchTerm !== '') {
-                showNotification(`Searching for "${searchTerm}"`, 'info');
-                // Here you would typically perform a search
-                this.value = '';
-            }
-        }
-    });
-
-    // Comment submission
-    const commentSubmitButtons = document.querySelectorAll('.comment-submit');
+    const notificationsContainer = document.getElementById('notifications-container') || 
+                                 createNotificationsContainer();
     
-    commentSubmitButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const commentInput = this.closest('.comment-input-container').querySelector('.comment-input');
-            const commentText = commentInput.value.trim();
-            
-            if (commentText !== '') {
-                const commentsSection = this.closest('.comments-section');
-                const postId = commentsSection.id.split('-')[1];
-                
-                // Create new comment element
-                const newComment = document.createElement('div');
-                newComment.className = 'comment';
-                newComment.innerHTML = `
-                    <img src="/api/placeholder/320/320" alt="Your profile">
-                    <div class="comment-content">
-                        <div class="comment-user">You</div>
-                        <div class="comment-text">${commentText}</div>
-                        <div class="comment-actions">
-                            <div class="comment-action">Like</div>
-                            <div class="comment-action">Reply</div>
-                            <div class="comment-action">Just now</div>
-                        </div>
-                    </div>
-                `;
-                
-                // Insert new comment before the next comment form
-                commentsSection.appendChild(newComment);
-                
-                // Clear input
-                commentInput.value = '';
-                
-                showNotification('Comment posted!', 'success');
-            } else {
-                showNotification('Please write a comment first', 'error');
-            }
-        });
-    });
-
-    // Setup functions
-    function setupPostInteractions(postId) {
-        const likeBtn = document.getElementById(`like-btn-${postId}`);
-        const commentBtn = document.getElementById(`comment-btn-${postId}`);
-        const requestBtn = document.getElementById(`request-btn-${postId}`);
-        const commentsSection = document.getElementById(`comments-${postId}`);
-        
-        // Like button
-        likeBtn.addEventListener('click', function() {
-            const likeIcon = this.querySelector('i');
-            
-            if (likeIcon.classList.contains('far')) {
-                likeIcon.classList.remove('far');
-                likeIcon.classList.add('fas');
-                this.classList.add('liked');
-                showNotification('Post liked!', 'success');
-            } else {
-                likeIcon.classList.remove('fas');
-                likeIcon.classList.add('far');
-                this.classList.remove('liked');
-                showNotification('Post unliked', 'info');
-            }
-        });
-        
-        // Comment button
-        commentBtn.addEventListener('click', function() {
-            if (commentsSection.style.display === 'none') {
-                commentsSection.style.display = 'block';
-                commentsSection.querySelector('.comment-input').focus();
-            } else {
-                commentsSection.style.display = 'none';
-            }
-        });
-        
-        // Request button
-        requestBtn.addEventListener('click', function() {
-            showModificationRequestModal(postId);
-        });
+    while (notificationsContainer.firstChild) {
+        notificationsContainer.removeChild(notificationsContainer.firstChild);
     }
 
-    // Notification system
-    function showNotification(message, type) {
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    
+    const icon = document.createElement('i');
+    switch (type) {
+        case 'success': icon.className = 'fas fa-check-circle'; break;
+        case 'error': icon.className = 'fas fa-exclamation-circle'; break;
+        case 'info': icon.className = 'fas fa-info-circle'; break;
+        default: icon.className = 'fas fa-bell';
+    }
+    
+    const textSpan = document.createElement('span');
+    textSpan.textContent = message;
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'notification-close';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.addEventListener('click', () => {
+        notification.classList.add('hiding');
+        setTimeout(() => notification.remove(), 300);
+    });
+    
+    notification.append(icon, textSpan, closeBtn);
+    notificationsContainer.appendChild(notification);
+    
+    setTimeout(() => notification.classList.add('showing'), 10);
+    
+    notificationTimeout = setTimeout(() => {
+        notification.classList.add('hiding');
+        setTimeout(() => notification.remove(), 300);
+    }, 5000);
+}
+
+function createNotificationsContainer() {
+    const container = document.createElement('div');
+    container.id = 'notifications-container';
+    document.body.appendChild(container);
+    return container;
+}
+
+// Reaction System
+function setupReactionSystem() {
+    document.querySelectorAll('[id^="like-btn-"]').forEach(button => {
+        const postId = button.id.split('-').pop();
+        const newButton = button.cloneNode(true);
+        button.replaceWith(newButton);
         
-        const icon = document.createElement('i');
-        switch (type) {
-            case 'success':
-                icon.className = 'fas fa-check-circle';
-                break;
-            case 'error':
-                icon.className = 'fas fa-exclamation-circle';
-                break;
-            case 'info':
-                icon.className = 'fas fa-info-circle';
-                break;
-            default:
-                icon.className = 'fas fa-bell';
-        }
+        newButton.innerHTML = '<i class="far fa-thumbs-up"></i> React';
+        newButton.dataset.postId = postId;
         
-        notification.appendChild(icon);
+        const reactionPopup = createReactionPopup();
+        newButton.appendChild(reactionPopup);
         
-        const textSpan = document.createElement('span');
-        textSpan.textContent = message;
-        notification.appendChild(textSpan);
+        let hideTimeout;
+        newButton.addEventListener('mouseenter', () => {
+            clearTimeout(hideTimeout);
+            reactionPopup.style.display = 'flex';
+        });
         
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'notification-close';
-        closeBtn.innerHTML = '&times;';
-        closeBtn.addEventListener('click', function() {
-            notification.classList.add('hiding');
-            setTimeout(() => {
-                notification.remove();
+        newButton.addEventListener('mouseleave', () => {
+            hideTimeout = setTimeout(() => {
+                reactionPopup.style.display = 'none';
             }, 300);
         });
-        notification.appendChild(closeBtn);
         
-        // If notifications container doesn't exist, create it
-        let notificationsContainer = document.getElementById('notifications-container');
-        if (!notificationsContainer) {
-            notificationsContainer = document.createElement('div');
-            notificationsContainer.id = 'notifications-container';
-            document.body.appendChild(notificationsContainer);
+        reactionPopup.addEventListener('mouseenter', () => {
+            clearTimeout(hideTimeout);
+        });
+        
+        reactionPopup.addEventListener('mouseleave', () => {
+            reactionPopup.style.display = 'none';
+        });
+        
+        reactionPopup.querySelectorAll('.reaction-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                handleReactionSelection(newButton, postId, option.dataset.type);
+            });
+        });
+        
+        newButton.addEventListener('click', (e) => {
+            if (e.target === newButton || e.target.closest('i')) {
+                handleReactionSelection(newButton, postId, 
+                    newButton.dataset.currentReaction ? null : 'helpful');
+            }
+        });
+    });
+    
+    addReactionStyles();
+}
+
+function handleReactionSelection(button, postId, reactionType) {
+    const currentReaction = button.dataset.currentReaction;
+    
+    if (currentReaction) {
+        updateReactionCount(postId, currentReaction, -1);
+    }
+    
+    if (reactionType) {
+        applyReaction(button, reactionType);
+        updateReactionCount(postId, reactionType, 1);
+        button.dataset.currentReaction = reactionType;
+    } else {
+        resetReaction(button);
+        delete button.dataset.currentReaction;
+    }
+}
+
+function applyReaction(button, reactionType) {
+    const iconMap = {
+        helpful: 'fa-thumbs-up',
+        nochanges: 'fa-check-circle',
+        needswork: 'fa-tools'
+    };
+    
+    const textMap = {
+        helpful: 'Helpful',
+        nochanges: 'No Changes',
+        needswork: 'Changes Needed'
+    };
+    
+    button.innerHTML = `<i class="fas ${iconMap[reactionType]}"></i> ${textMap[reactionType]}`;
+    button.className = `action-btn reaction-${reactionType}`;
+    
+    const popup = createReactionPopup();
+    button.appendChild(popup);
+}
+
+function resetReaction(button) {
+    button.innerHTML = '<i class="far fa-thumbs-up"></i> React';
+    button.className = 'action-btn';
+    
+    const popup = createReactionPopup();
+    button.appendChild(popup);
+}
+
+function createReactionPopup() {
+    const popup = document.createElement('div');
+    popup.className = 'reaction-popup';
+    popup.style.display = 'none';
+    popup.innerHTML = `
+        <div class="reaction-option" data-type="helpful">
+            <i class="fas fa-thumbs-up"></i>
+            <span>Helpful</span>
+        </div>
+        <div class="reaction-option" data-type="nochanges">
+            <i class="fas fa-check-circle"></i>
+            <span>No Changes</span>
+        </div>
+        <div class="reaction-option" data-type="needswork">
+            <i class="fas fa-tools"></i>
+            <span>Changes Needed</span>
+        </div>
+    `;
+    return popup;
+}
+
+function updateReactionCount(postId, reactionType, increment) {
+    const postCard = document.querySelector(`[id^="like-btn-${postId}"]`).closest('.post-card');
+    if (!postCard) return;
+    
+    const statsDiv = postCard.querySelector('.post-stats div:first-child');
+    if (!statsDiv) return;
+    
+    const statsText = statsDiv.textContent;
+    const counts = {
+        helpful: parseInt(statsText.match(/(\d+) Helpful/)?.[1] || statsText.match(/(\d+) Likes/)?.[1] || 0),
+        nochanges: parseInt(statsText.match(/(\d+) No Changes/)?.[1] || 0),
+        needswork: parseInt(statsText.match(/(\d+) Changes Needed/)?.[1] || 0),
+        comments: parseInt(statsText.match(/(\d+) Comments/)?.[1] || 0),
+        requests: parseInt(statsText.match(/(\d+) Requests/)?.[1] || 0)
+    };
+    
+    counts[reactionType] = Math.max(0, counts[reactionType] + increment);
+    
+    const reactionParts = [];
+    if (counts.helpful > 0) reactionParts.push(`${counts.helpful} Helpful`);
+    if (counts.nochanges > 0) reactionParts.push(`${counts.nochanges} No Changes`);
+    if (counts.needswork > 0) reactionParts.push(`${counts.needswork} Changes Needed`);
+    
+    const reactionsText = reactionParts.length > 0 ? reactionParts.join(', ') : '0 Reactions';
+    statsDiv.textContent = `${reactionsText} • ${counts.comments} Comments • ${counts.requests} Requests`;
+    
+    updateReactionCounters(postCard, counts.helpful, counts.nochanges, counts.needswork);
+}
+
+function updateReactionCounters(postCard, helpful, nochanges, needswork) {
+    let countersDiv = postCard.querySelector('.reaction-counters');
+    if (!countersDiv) {
+        countersDiv = document.createElement('div');
+        countersDiv.className = 'reaction-counters';
+        postCard.querySelector('.post-stats').prepend(countersDiv);
+    }
+    
+    if (helpful + nochanges + needswork > 0) {
+        countersDiv.innerHTML = `
+            ${helpful > 0 ? `<div class="reaction-counter helpful"><i class="fas fa-thumbs-up"></i>${helpful}</div>` : ''}
+            ${nochanges > 0 ? `<div class="reaction-counter no-changes"><i class="fas fa-check-circle"></i>${nochanges}</div>` : ''}
+            ${needswork > 0 ? `<div class="reaction-counter needs-work"><i class="fas fa-tools"></i>${needswork}</div>` : ''}
+        `;
+        countersDiv.style.display = 'flex';
+    } else {
+        countersDiv.style.display = 'none';
+    }
+}
+
+function addReactionStyles() {
+    if (document.getElementById('reaction-styles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'reaction-styles';
+    style.textContent = `
+        .action-btn {
+            position: relative;
         }
         
-        notificationsContainer.appendChild(notification);
+        .reaction-popup {
+            position: absolute;
+            bottom: 40px;
+            left: 0;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            padding: 8px;
+            z-index: 100;
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            border: 1px solid var(--border-color);
+        }
         
-        // Add the 'showing' class after a small delay to trigger the animation
-        setTimeout(() => {
-            notification.classList.add('showing');
-        }, 10);
+        .reaction-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 10px;
+            color: var(--text-primary);
+        }
         
-        // Auto-remove after 5 seconds
-        setTimeout(() => {
-            if (notification.parentNode === notificationsContainer) {
-                notification.classList.add('hiding');
-                setTimeout(() => {
-                    if (notification.parentNode === notificationsContainer) {
-                        notification.remove();
-                    }
-                }, 300);
-            }
-        }, 5000);
-    }
+        .reaction-option:hover {
+            background-color: var(--accent-purple);
+            transform: scale(1.1);
+        }
+        
+        .reaction-option i {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+        
+        .reaction-option span {
+            font-size: 0.7rem;
+            white-space: nowrap;
+        }
+        
+        .reaction-helpful, .reaction-option[data-type="helpful"] i {
+            color: #4267B2;
+        }
+        
+        .reaction-nochanges, .reaction-option[data-type="nochanges"] i {
+            color: #1DB954;
+        }
+        
+        .reaction-needswork, .reaction-option[data-type="needswork"] i {
+            color: #E4405F;
+        }
+        
+        .reaction-counters {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .reaction-counter {
+            background: var(--accent-purple);
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+    `;
+    document.head.appendChild(style);
+}
 
-    // Modification request modal
-    function showModificationRequestModal(postId) {
-        // Create modal overlay
-        const overlay = document.createElement('div');
-        overlay.className = 'modal-overlay';
+// Comment System
+function setupCommentsSection() {
+    document.querySelectorAll('[id^="comment-btn-"]').forEach(button => {
+        const postId = button.id.split('-').pop();
+        const commentsSection = document.getElementById(`comments-${postId}`);
         
-        // Create modal content
-        const modal = document.createElement('div');
-        modal.className = 'modal';
+        button.addEventListener('click', () => {
+            const isHidden = commentsSection.style.display === 'none' || !commentsSection.style.display;
+            commentsSection.style.display = isHidden ? 'block' : 'none';
+            button.classList.toggle('active', isHidden);
+            
+            if (isHidden) {
+                commentsSection.querySelector('.comment-input')?.focus();
+            }
+        });
         
-        modal.innerHTML = `
-            <div class="modal-header">
-                <h3>Request Code Modification</h3>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p>Describe the changes you'd like to suggest:</p>
-                <textarea class="modal-textarea" placeholder="I suggest modifying..."></textarea>
-                <div class="modal-options">
-                    <label>
-                        <input type="checkbox" checked> Include snippet from original code
-                    </label>
-                    <label>
-                        <input type="checkbox"> Offer to implement the change
-                    </label>
+        setupCommentSubmit(postId);
+    });
+}
+
+function setupCommentSubmit(postId) {
+    const commentsSection = document.getElementById(`comments-${postId}`);
+    if (!commentsSection) return;
+    
+    const form = commentsSection.querySelector('.comment-form');
+    const input = form.querySelector('.comment-input');
+    const submitBtn = form.querySelector('.comment-submit');
+    
+    function submitComment() {
+        const text = input.value.trim();
+        if (!text) return;
+        
+        const newComment = document.createElement('div');
+        newComment.className = 'comment';
+        newComment.innerHTML = `
+            <img src="/api/placeholder/320/320" alt="Your profile">
+            <div class="comment-content">
+                <div class="comment-user">You</div>
+                <div class="comment-text">${escapeHTML(text)}</div>
+                <div class="comment-actions">
+                    <div class="comment-action">Like</div>
+                    <div class="comment-action">Reply</div>
+                    <div class="comment-action">Just now</div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="modal-cancel">Cancel</button>
-                <button class="modal-submit">Submit Request</button>
             </div>
         `;
         
-        // Append modal to overlay, and overlay to body
-        overlay.appendChild(modal);
-        document.body.appendChild(overlay);
-        
-        // Add closing functionality
-        const closeBtn = modal.querySelector('.modal-close');
-        const cancelBtn = modal.querySelector('.modal-cancel');
-        const submitBtn = modal.querySelector('.modal-submit');
-        const textarea = modal.querySelector('.modal-textarea');
-        
-        function closeModal() {
-            overlay.classList.add('hiding');
-            setTimeout(() => {
-                overlay.remove();
-            }, 300);
-        }
-        
-        closeBtn.addEventListener('click', closeModal);
-        cancelBtn.addEventListener('click', closeModal);
-        
-        // Add submit functionality
-        submitBtn.addEventListener('click', function() {
-            const requestText = textarea.value.trim();
-            if (requestText !== '') {
-                showNotification('Modification request submitted!', 'success');
-                closeModal();
-            } else {
-                showNotification('Please describe your request first', 'error');
-            }
-        });
-        
-        // Focus textarea
-        textarea.focus();
-        
-        // Add showing class to trigger animation
-        setTimeout(() => {
-            overlay.classList.add('showing');
-        }, 10);
+        commentsSection.insertBefore(newComment, form.nextSibling);
+        input.value = '';
+        updateCommentCount(postId, 1);
+        showNotification('Comment posted!', 'success');
     }
-
-    // Initialize sidebar menu functionality
-    const menuItems = document.querySelectorAll('.menu-item');
     
-    menuItems.forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Remove active class from all menu items
-            menuItems.forEach(i => i.classList.remove('active'));
-            
-            // Add active class to clicked item
-            this.classList.add('active');
-            
-            const menuText = this.textContent.trim();
-            showNotification(`Navigated to ${menuText}`, 'info');
-        });
-    });
+    submitBtn.addEventListener('click', submitComment);
+    input.addEventListener('keypress', (e) => e.key === 'Enter' && submitComment());
+}
 
-    // Initialize navigation links
-    const navLinks = document.querySelectorAll('.nav-links a');
+function updateCommentCount(postId, increment) {
+    const postCard = document.querySelector(`#comments-${postId}`)?.closest('.post-card');
+    if (!postCard) return;
     
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Remove active class from all nav links
-            navLinks.forEach(l => l.classList.remove('active'));
-            
-            // Add active class to clicked link
-            this.classList.add('active');
-            
-            const linkText = this.textContent.trim();
-            showNotification(`Switched to ${linkText}`, 'info');
-        });
-    });
-
-    // User action buttons (plus, messages)
-    const plusBtn = document.querySelector('.user-actions .icon-btn:nth-child(1)');
-    plusBtn.addEventListener('click', function() {
-        showNotification('Create new content', 'info');
-    });
+    const statsDiv = postCard.querySelector('.post-stats div:first-child');
+    const statsText = statsDiv.textContent;
+    const commentMatch = statsText.match(/(\d+) Comments/);
+    const currentCount = commentMatch ? parseInt(commentMatch[1]) : 0;
+    const newCount = Math.max(0, currentCount + increment);
     
-    const messagesBtn = document.querySelector('.user-actions .icon-btn:nth-child(2)');
-    messagesBtn.addEventListener('click', function() {
-        showNotification('Messages opened', 'info');
+    statsDiv.textContent = commentMatch 
+        ? statsText.replace(`${currentCount} Comments`, `${newCount} Comments`)
+        : statsText.replace(`${currentCount} Likes`, `${currentCount} Likes • ${newCount} Comments`);
+}
+
+// Request Modification Modal
+function setupRequestButtons() {
+    document.querySelectorAll('[id^="request-btn-"]').forEach(button => {
+        const postId = button.id.split('-').pop();
+        button.addEventListener('click', () => showModificationRequestModal(postId));
     });
-});
-document.addEventListener('DOMContentLoaded', function() {
-    // Theme toggle functionality - FIXED
-    const themeToggle = document.getElementById('theme-toggle');
-    const body = document.body;
-    const themeIcon = themeToggle.querySelector('i');
+}
 
-    // Check for saved theme preference
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        body.classList.add('dark-theme');
-        themeIcon.classList.remove('fa-moon');
-        themeIcon.classList.add('fa-sun');
-    }
-
-    // Toggle theme when button is clicked
-    themeToggle.addEventListener('click', function() {
-        body.classList.toggle('dark-theme');
-        
-        if (body.classList.contains('dark-theme')) {
-            localStorage.setItem('theme', 'dark');
-            themeIcon.classList.remove('fa-moon');
-            themeIcon.classList.add('fa-sun');
-        } else {
-            localStorage.setItem('theme', 'light');
-            themeIcon.classList.remove('fa-sun');
-            themeIcon.classList.add('fa-moon');
-        }
-        
-        showNotification('Theme updated', 'info');
-    });
-
-    // Post form interactions
-    const postForm = document.querySelector('.post-form');
-    const postInput = document.querySelector('.post-input');
-    const postButton = document.querySelector('.post-btn');
-
-    postInput.addEventListener('focus', function() {
-        postForm.classList.add('active');
-    });
-
-    postInput.addEventListener('blur', function() {
-        if (postInput.value.trim() === '') {
-            postForm.classList.remove('active');
-        }
-    });
-
-    postButton.addEventListener('click', function() {
-        if (postInput.value.trim() !== '') {
-            showNotification('Post shared successfully!', 'success');
-            postInput.value = '';
-            postForm.classList.remove('active');
-        } else {
-            showNotification('Please write something before posting.', 'error');
-        }
-    });
-
-    // Code attachment button
-    const codeAttachBtn = document.querySelector('.attach-btn:nth-child(1)');
-    codeAttachBtn.addEventListener('click', function() {
-        showCodeEditorModal();
-    });
-
-    // Image attachment button
-    const imageAttachBtn = document.querySelector('.attach-btn:nth-child(2)');
-    imageAttachBtn.addEventListener('click', function() {
-        showImageUploaderModal();
-    });
-
-    // Link attachment button
-    const linkAttachBtn = document.querySelector('.attach-btn:nth-child(3)');
-    linkAttachBtn.addEventListener('click', function() {
-        showLinkModal();
-    });
-
-    // Gist attachment button
-    const gistAttachBtn = document.querySelector('.attach-btn:nth-child(4)');
-    gistAttachBtn.addEventListener('click', function() {
-        showGistModal();
-    });
-
-    // Filter tabs functionality - ENHANCED
-    const filterTabs = document.querySelectorAll('.filter-tab');
-    const feed = document.querySelector('.feed');
-    const postCards = document.querySelectorAll('.post-card');
+function showModificationRequestModal(postId) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
     
-    // Sample data for demonstration
-    const postsData = {
-        recent: Array.from(postCards),
-        popular: [],
-        following: [],
-        urgent: []
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-header">
+            <h3>Request Code Modification</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p class="modal-instruction">Describe the changes you'd like to suggest:</p>
+            <textarea class="modal-textarea" placeholder="I suggest modifying..."></textarea>
+            <div class="modal-options">
+                <label class="modal-option">
+                    <input type="checkbox" checked>
+                    <span>Include snippet from original code</span>
+                </label>
+                <label class="modal-option">
+                    <input type="checkbox">
+                    <span>Offer to implement the change</span>
+                </label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-cancel">Cancel</button>
+            <button class="modal-submit">Submit Request</button>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    const closeModal = () => {
+        overlay.classList.add('hiding');
+        setTimeout(() => overlay.remove(), 300);
     };
     
-    // Create sample posts for Popular, Following, and Urgent
-    function createSamplePosts() {
-        // Create Popular Posts
-        const popularPost1 = createSamplePost(
-            'Lisa Johnson', 
-            'DevOps Engineer', 
-            '6h ago',
-            'Docker',
-            'Help with Docker compose networking issue?',
-            'docker-compose',
-            'I\'m trying to get multiple containers to communicate but running into networking issues. Here\'s my config:',
-            65, 18, 5, 230
-        );
-        
-        const popularPost2 = createSamplePost(
-            'Jake Davidson', 
-            'Security Expert', 
-            '1d ago',
-            'Security',
-            'Best practices for API authentication?',
-            'javascript',
-            'I\'m building a REST API and need to implement proper authentication. Currently using JWT but have some concerns:',
-            95, 30, 8, 450
-        );
-        
-        postsData.popular.push(popularPost1, popularPost2);
-        
-        // Create Following Posts
-        const followingPost1 = createSamplePost(
-            'Julia Lee', 
-            'Senior Developer', 
-            '3h ago',
-            'Testing',
-            'Unit testing approach for React components',
-            'react',
-            'I\'ve been refining my testing strategy for React components. Here\'s what I\'ve found works well:',
-            42, 7, 0, 120
-        );
-        
-        const followingPost2 = createSamplePost(
-            'Michael Wong', 
-            'Full Stack Engineer', 
-            '12h ago',
-            'GraphQL',
-            'Optimizing GraphQL queries for complex data',
-            'graphql',
-            'When working with deeply nested data structures in GraphQL, I\'ve developed these patterns:',
-            36, 12, 2, 145
-        );
-        
-        postsData.following.push(followingPost1, followingPost2);
-        
-        // Create Urgent Posts
-        const urgentPost1 = createSamplePost(
-            'Taylor Swift', 
-            'Backend Developer', 
-            '20m ago',
-            'URGENT',
-            'Production down! Redis connection issue',
-            'redis',
-            'Our production environment is down due to Redis connection failures. I\'ve tried:',
-            8, 22, 14, 67,
-            'urgent'
-        );
-        
-        const urgentPost2 = createSamplePost(
-            'Ryan Garcia', 
-            'DevOps Engineer', 
-            '40m ago',
-            'URGENT',
-            'Critical security vulnerability in our npm package',
-            'javascript',
-            'Just discovered a critical security vulnerability in the dependency we\'re using. Need urgent advice on:',
-            12, 18, 10, 89,
-            'urgent'
-        );
-        
-        postsData.urgent.push(urgentPost1, urgentPost2);
-    }
+    modal.querySelector('.modal-close').addEventListener('click', closeModal);
+    modal.querySelector('.modal-cancel').addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => e.target === overlay && closeModal());
     
-    // Create a sample post with the given data
-    function createSamplePost(userName, userRole, time, tag, title, language, content, likes, comments, requests, views, urgency = '') {
-        const post = document.createElement('div');
-        post.className = `post-card ${urgency}`;
+    modal.querySelector('.modal-submit').addEventListener('click', () => {
+        const text = modal.querySelector('.modal-textarea').value.trim();
+        if (text) {
+            updateRequestCount(postId);
+            showNotification('Modification request submitted!', 'success');
+            closeModal();
+        } else {
+            showNotification('Please describe your request first', 'error');
+        }
+    });
+    
+    modal.querySelector('.modal-textarea').focus();
+    
+    setTimeout(() => {
+        overlay.classList.add('showing');
+        modal.style.transform = 'scale(1)';
+    }, 10);
+    
+    addModalStyles();
+}
+
+function updateRequestCount(postId) {
+    const postCard = document.querySelector(`[id^="request-btn-${postId}"]`)?.closest('.post-card');
+    if (!postCard) return;
+    
+    const statsDiv = postCard.querySelector('.post-stats div:first-child');
+    const statsText = statsDiv.textContent;
+    const requestMatch = statsText.match(/(\d+) Requests/);
+    const currentCount = requestMatch ? parseInt(requestMatch[1]) : 0;
+    const newCount = currentCount + 1;
+    
+    statsDiv.textContent = requestMatch
+        ? statsText.replace(`${currentCount} Requests`, `${newCount} Requests`)
+        : `${statsText} • ${newCount} Requests`;
+}
+
+function addModalStyles() {
+    if (document.getElementById('modal-styles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'modal-styles';
+    style.textContent = `
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
         
-        post.innerHTML = `
+        .modal-overlay.showing {
+            opacity: 1;
+        }
+        
+        .modal-overlay.hiding {
+            opacity: 0;
+        }
+        
+        .modal {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        .modal-overlay.showing .modal {
+            transform: scale(1);
+        }
+        
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: var(--text-primary);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0;
+        }
+        
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-instruction {
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+        
+        .modal-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            resize: vertical;
+            font-family: inherit;
+            margin-bottom: 15px;
+            background-color: var(--accent-purple);
+            color: var(--text-primary);
+        }
+        
+        .modal-textarea::placeholder {
+            color: var(--text-secondary);
+        }
+        
+        .modal-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .modal-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        
+        .modal-option input {
+            cursor: pointer;
+        }
+        
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        
+        .modal-cancel, .modal-submit {
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .modal-cancel {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+        
+        .modal-cancel:hover {
+            background-color: var(--accent-purple);
+        }
+        
+        .modal-submit {
+            background-color: var(--accent-color);
+            border: none;
+            color: var(--dark-purple);
+        }
+        
+        .modal-submit:hover {
+            background-color: #8a8eff;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Code Block Actions
+function setupCodeActions() {
+    document.querySelectorAll('.code-action-btn:nth-child(1)').forEach(button => {
+        button.addEventListener('click', function() {
+            const codeBlock = this.closest('.code-block');
+            const code = codeBlock.querySelector('pre').textContent;
+            
+            navigator.clipboard.writeText(code)
+                .then(() => showNotification('Code copied to clipboard!', 'success'))
+                .catch(() => showNotification('Failed to copy code', 'error'));
+        });
+    });
+
+    document.querySelectorAll('.code-action-btn:nth-child(2)').forEach(button => {
+        button.addEventListener('click', function() {
+            const codeBlock = this.closest('.code-block');
+            const isExpanded = codeBlock.classList.toggle('expanded');
+            const icon = this.querySelector('i');
+            
+            if (isExpanded) {
+                icon.classList.replace('fa-expand', 'fa-compress');
+                codeBlock.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                icon.classList.replace('fa-compress', 'fa-expand');
+            }
+            
+            showNotification(`Code ${isExpanded ? 'expanded' : 'collapsed'}`, 'info');
+        });
+    });
+}
+
+// Post Filtering System
+function setupFilterTabs() {
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            filterPosts(this.textContent.trim());
+        });
+    });
+}
+
+function filterPosts(filterType) {
+    const allPosts = Array.from(document.querySelectorAll('.post-card'));
+    const postContainer = document.querySelector('.feed');
+    
+    allPosts.forEach(post => post.style.display = 'none');
+    
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.className = 'loading-indicator';
+    loadingIndicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading posts...';
+    postContainer.appendChild(loadingIndicator);
+    
+    setTimeout(() => {
+        loadingIndicator.remove();
+        
+        let filteredPosts = [];
+        switch(filterType.toLowerCase()) {
+            case 'recent':
+                filteredPosts = allPosts.sort((a, b) => {
+                    const timeA = parseInt(a.querySelector('.post-meta span:last-child').textContent.replace('h ago', ''));
+                    const timeB = parseInt(b.querySelector('.post-meta span:last-child').textContent.replace('h ago', ''));
+                    return timeA - timeB;
+                });
+                break;
+            case 'popular':
+                filteredPosts = allPosts.sort((a, b) => {
+                    const likesA = parseInt(a.querySelector('.post-stats div:first-child').textContent.match(/(\d+) Likes/)?.[1] || 0);
+                    const likesB = parseInt(b.querySelector('.post-stats div:first-child').textContent.match(/(\d+) Likes/)?.[1] || 0);
+                    return likesB - likesA;
+                });
+                break;
+            case 'following':
+                filteredPosts = allPosts.filter(post => {
+                    const userName = post.querySelector('.user-name').textContent;
+                    return ['Sarah Chen', 'Alex Rodriguez'].includes(userName);
+                });
+                break;
+            case 'urgent':
+                filteredPosts = allPosts.filter(post => {
+                    const postText = post.querySelector('.post-content p').textContent.toLowerCase();
+                    return postText.includes('urgent') || postText.includes('help') || 
+                           postText.includes('stuck') || postText.includes('emergency');
+                });
+                break;
+            default:
+                filteredPosts = allPosts;
+        }
+        
+        filteredPosts.forEach((post, index) => {
+            setTimeout(() => {
+                post.style.display = 'block';
+                post.style.animation = 'fadeIn 0.3s ease';
+            }, index * 50);
+        });
+        
+        showNotification(`Showing ${filterType} posts`, 'info');
+    }, 800);
+}
+
+// Infinite Scroll
+function setupInfiniteScroll() {
+    let isLoading = false;
+    
+    window.addEventListener('scroll', () => {
+        const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+        const scrollPosition = scrollTop + clientHeight;
+        
+        if (scrollPosition >= scrollHeight - 100 && !isLoading) {
+            isLoading = true;
+            loadMorePosts();
+        }
+    });
+}
+
+function loadMorePosts() {
+    const postContainer = document.querySelector('.feed');
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.className = 'loading-indicator';
+    loadingIndicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading more posts...';
+    postContainer.appendChild(loadingIndicator);
+    
+    setTimeout(() => {
+        loadingIndicator.remove();
+        
+        const newPost = document.createElement('div');
+        newPost.className = 'post-card';
+        newPost.innerHTML = `
             <div class="post-header">
                 <div class="user-info">
-                    <img src="/api/placeholder/320/320" alt="${userName}">
+                    <img src="../static/images/man.png" alt="New User">
                     <div class="user-text">
-                        <div class="user-name">${userName}</div>
+                        <div class="user-name">New User</div>
                         <div class="post-meta">
-                            <span>${userRole}</span>
+                            <span>Full Stack Developer</span>
                             <span class="dot">•</span>
-                            <span>${time}</span>
-                            <span class="post-tag">${tag}</span>
+                            <span>Just now</span>
+                            <span class="post-tag">JavaScript</span>
                         </div>
                     </div>
                 </div>
                 <button class="post-menu"><i class="fas fa-ellipsis-h"></i></button>
             </div>
             <div class="post-content">
-                <p>${title}</p>
+                <p>This is a dynamically loaded post when you scroll to the bottom!</p>
                 <div class="code-block">
                     <div class="code-header">
                         <div class="language-tag">
-                            <i class="fab fa-${language}"></i> ${language.charAt(0).toUpperCase() + language.slice(1)}
+                            <i class="fab fa-js"></i> JavaScript
                         </div>
                         <div class="code-actions">
                             <button class="code-action-btn"><i class="fas fa-copy"></i></button>
                             <button class="code-action-btn"><i class="fas fa-expand"></i></button>
                         </div>
                     </div>
-                    <pre><span class="line-numbers">1</span>${content}</pre>
+                    <pre><span class="line-numbers">1</span>console.log("Infinite scroll works!");</pre>
                 </div>
             </div>
             <div class="post-stats">
-                <div>${likes} Likes • ${comments} Comments • ${requests} Requests</div>
-                <div>Viewed ${views} times</div>
+                <div>0 Likes • 0 Comments • 0 Requests</div>
+                <div>Viewed 0 times</div>
             </div>
             <div class="post-actions-menu">
-                <button class="action-btn">
+                <button class="action-btn" id="like-btn-new">
                     <i class="far fa-thumbs-up"></i> Like
                 </button>
-                <button class="action-btn">
+                <button class="action-btn" id="comment-btn-new">
                     <i class="far fa-comment"></i> Comment
                 </button>
-                <button class="action-btn">
+                <button class="action-btn" id="request-btn-new">
                     <i class="far fa-edit"></i> Request modification
                 </button>
             </div>
-            <div class="comments-section" style="display: none;">
+            <div class="comments-section" id="comments-new" style="display: none;">
                 <div class="comment-form">
                     <img src="/api/placeholder/320/320" alt="Your profile">
                     <div class="comment-input-container">
@@ -636,794 +824,432 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Add event listeners to the new buttons
-        setupPostInteractionsForElement(post);
+        postContainer.appendChild(newPost);
         
-        return post;
-    }
-    
-    // Create sample posts at startup
-    createSamplePosts();
-    
-    // Initialize filter tabs
-    filterTabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            // Remove active class from all tabs
-            filterTabs.forEach(t => t.classList.remove('active'));
-            
-            // Add active class to clicked tab
-            this.classList.add('active');
-            
-            // Get the filter type
-            const filterType = this.textContent.toLowerCase();
-            
-            // Clear the feed (except for the post form and filter tabs)
-            const feedChildren = Array.from(feed.children);
-            feedChildren.forEach(child => {
-                if (!child.classList.contains('post-form') && !child.classList.contains('filter-tabs')) {
-                    child.remove();
-                }
-            });
-            
-            // Add appropriate posts based on filter
-            if (postsData[filterType]) {
-                postsData[filterType].forEach(post => {
-                    // Clone the post to avoid removing it from the original array
-                    const postClone = post.cloneNode(true);
-                    feed.appendChild(postClone);
-                    
-                    // Re-add event listeners to the cloned post
-                    setupPostInteractionsForElement(postClone);
-                });
-            }
-            
-            showNotification(`Showing ${this.textContent} posts`, 'info');
-        });
-    });
-
-    // Post like, comment, and request buttons for existing posts
-    setupPostInteractions('1');
-    setupPostInteractions('2');
-
-    // Code block copy buttons
-    const copyButtons = document.querySelectorAll('.code-action-btn:nth-child(1)');
-    
-    copyButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const codeBlock = this.closest('.code-block').querySelector('pre').textContent;
-            navigator.clipboard.writeText(codeBlock)
-                .then(() => {
-                    showNotification('Code copied to clipboard!', 'success');
-                })
-                .catch(() => {
-                    showNotification('Failed to copy code', 'error');
-                });
-        });
-    });
-
-    // Code block expand buttons
-    const expandButtons = document.querySelectorAll('.code-action-btn:nth-child(2)');
-    
-    expandButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const codeBlock = this.closest('.code-block');
-            codeBlock.classList.toggle('expanded');
-            
-            const icon = this.querySelector('i');
-            if (codeBlock.classList.contains('expanded')) {
-                icon.classList.remove('fa-expand');
-                icon.classList.add('fa-compress');
-                showNotification('Code expanded', 'info');
-            } else {
-                icon.classList.remove('fa-compress');
-                icon.classList.add('fa-expand');
-                showNotification('Code collapsed', 'info');
-            }
-        });
-    });
-
-    // Challenge buttons
-    const challengeButtons = document.querySelectorAll('.challenge-btn');
-    
-    challengeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const challengeTitle = this.closest('.challenge-card').querySelector('.challenge-title').textContent;
-            showNotification(`Starting ${challengeTitle}`, 'success');
-        });
-    });
-
-    // Search functionality
-    const searchInput = document.querySelector('.search-bar input');
-    
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            const searchTerm = this.value.trim();
-            if (searchTerm !== '') {
-                showNotification(`Searching for "${searchTerm}"`, 'info');
-                // Here you would typically perform a search
-                this.value = '';
-            }
-        }
-    });
-
-    // Comment submission
-    const commentSubmitButtons = document.querySelectorAll('.comment-submit');
-    
-    commentSubmitButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            submitComment(this);
-        });
-    });
-
-    // Initialize sidebar menu functionality
-    const menuItems = document.querySelectorAll('.menu-item');
-    
-    menuItems.forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Remove active class from all menu items
-            menuItems.forEach(i => i.classList.remove('active'));
-            
-            // Add active class to clicked item
-            this.classList.add('active');
-            
-            const menuText = this.textContent.trim();
-            showNotification(`Navigated to ${menuText}`, 'info');
-        });
-    });
-
-    // Initialize navigation links
-    const navLinks = document.querySelectorAll('.nav-links a');
-    
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Remove active class from all nav links
-            navLinks.forEach(l => l.classList.remove('active'));
-            
-            // Add active class to clicked link
-            this.classList.add('active');
-            
-            const linkText = this.textContent.trim();
-            showNotification(`Switched to ${linkText}`, 'info');
-        });
-    });
-
-    // User action buttons (plus, messages) - ENHANCED
-    const plusBtn = document.querySelector('.user-actions .icon-btn:nth-child(1)');
-    plusBtn.addEventListener('click', function() {
-        showCreateMenu(this);
-    });
-    
-    // Messages functionality - ENHANCED
-    const messagesBtn = document.querySelector('.user-actions .icon-btn:nth-child(2)');
-    messagesBtn.addEventListener('click', function() {
-        toggleMessagesPanel();
-    });
-
-    // Setup functions
-    function setupPostInteractions(postId) {
-        const likeBtn = document.getElementById(`like-btn-${postId}`);
-        const commentBtn = document.getElementById(`comment-btn-${postId}`);
-        const requestBtn = document.getElementById(`request-btn-${postId}`);
-        const commentsSection = document.getElementById(`comments-${postId}`);
-        
-        if (!likeBtn || !commentBtn || !requestBtn || !commentsSection) return;
-        
-        // Like button
-        likeBtn.addEventListener('click', function() {
-            const likeIcon = this.querySelector('i');
-            
-            if (likeIcon.classList.contains('far')) {
-                likeIcon.classList.remove('far');
-                likeIcon.classList.add('fas');
-                this.classList.add('liked');
-                showNotification('Post liked!', 'success');
-            } else {
-                likeIcon.classList.remove('fas');
-                likeIcon.classList.add('far');
-                this.classList.remove('liked');
-                showNotification('Post unliked', 'info');
-            }
-        });
-        
-        // Comment button
-        commentBtn.addEventListener('click', function() {
-            if (commentsSection.style.display === 'none') {
-                commentsSection.style.display = 'block';
-                commentsSection.querySelector('.comment-input').focus();
-            } else {
-                commentsSection.style.display = 'none';
-            }
-        });
-        
-        // Request button
-        requestBtn.addEventListener('click', function() {
-            showModificationRequestModal(postId);
-        });
-    }
-    
-    function setupPostInteractionsForElement(postElement) {
-        // Like button
-        const likeBtn = postElement.querySelector('.action-btn:nth-child(1)');
-        if (likeBtn) {
-            likeBtn.addEventListener('click', function() {
-                const likeIcon = this.querySelector('i');
-                
-                if (likeIcon.classList.contains('far')) {
-                    likeIcon.classList.remove('far');
-                    likeIcon.classList.add('fas');
-                    this.classList.add('liked');
-                    showNotification('Post liked!', 'success');
-                } else {
-                    likeIcon.classList.remove('fas');
-                    likeIcon.classList.add('far');
-                    this.classList.remove('liked');
-                    showNotification('Post unliked', 'info');
-                }
-            });
-        }
-        
-        // Comment button
-        const commentBtn = postElement.querySelector('.action-btn:nth-child(2)');
-        const commentsSection = postElement.querySelector('.comments-section');
-        
-        if (commentBtn && commentsSection) {
-            commentBtn.addEventListener('click', function() {
-                if (commentsSection.style.display === 'none') {
-                    commentsSection.style.display = 'block';
-                    commentsSection.querySelector('.comment-input').focus();
-                } else {
-                    commentsSection.style.display = 'none';
-                }
-            });
-        }
-        
-        // Request button
-        const requestBtn = postElement.querySelector('.action-btn:nth-child(3)');
-        if (requestBtn) {
-            requestBtn.addEventListener('click', function() {
-                showModificationRequestModal('dynamic');
-            });
-        }
-        
-        // Code action buttons
-        const copyBtn = postElement.querySelector('.code-action-btn:nth-child(1)');
-        if (copyBtn) {
-            copyBtn.addEventListener('click', function() {
-                const codeBlock = this.closest('.code-block').querySelector('pre').textContent;
-                navigator.clipboard.writeText(codeBlock)
-                    .then(() => {
-                        showNotification('Code copied to clipboard!', 'success');
-                    })
-                    .catch(() => {
-                        showNotification('Failed to copy code', 'error');
-                    });
-            });
-        }
-        
-        const expandBtn = postElement.querySelector('.code-action-btn:nth-child(2)');
-        if (expandBtn) {
-            expandBtn.addEventListener('click', function() {
-                const codeBlock = this.closest('.code-block');
-                codeBlock.classList.toggle('expanded');
-                
-                const icon = this.querySelector('i');
-                if (codeBlock.classList.contains('expanded')) {
-                    icon.classList.remove('fa-expand');
-                    icon.classList.add('fa-compress');
-                    showNotification('Code expanded', 'info');
-                } else {
-                    icon.classList.remove('fa-compress');
-                    icon.classList.add('fa-expand');
-                    showNotification('Code collapsed', 'info');
-                }
-            });
-        }
-        
-        // Comment submit button
-        const commentSubmitBtn = postElement.querySelector('.comment-submit');
-        if (commentSubmitBtn) {
-            commentSubmitBtn.addEventListener('click', function() {
-                submitComment(this);
-            });
-        }
-    }
-    
-    function submitComment(buttonElement) {
-        const commentInput = buttonElement.closest('.comment-input-container').querySelector('.comment-input');
-        const commentText = commentInput.value.trim();
-        
-        if (commentText !== '') {
-            const commentsSection = buttonElement.closest('.comments-section');
-            
-            // Create new comment element
-            const newComment = document.createElement('div');
-            newComment.className = 'comment';
-            newComment.innerHTML = `
-                <img src="/api/placeholder/320/320" alt="Your profile">
-                <div class="comment-content">
-                    <div class="comment-user">You</div>
-                    <div class="comment-text">${commentText}</div>
-                    <div class="comment-actions">
-                        <div class="comment-action">Like</div>
-                        <div class="comment-action">Reply</div>
-                        <div class="comment-action">Just now</div>
-                    </div>
-                </div>
-            `;
-            
-            // Insert new comment before the next comment form
-            commentsSection.appendChild(newComment);
-            
-            // Clear input
-            commentInput.value = '';
-            
-            showNotification('Comment posted!', 'success');
-        } else {
-            showNotification('Please write a comment first', 'error');
-        }
-    }
-
-    // Enhanced Messages System - NEW
-    function toggleMessagesPanel() {
-        let messagesPanel = document.getElementById('messages-panel');
-        
-        if (messagesPanel) {
-            // Panel exists, toggle it
-            messagesPanel.classList.toggle('hidden');
-            
-            if (!messagesPanel.classList.contains('hidden')) {
-                // Focus on the input field when panel is shown
-                const inputField = messagesPanel.querySelector('.messages-input');
-                if (inputField) inputField.focus();
-                showNotification('Messages opened', 'info');
-            } else {
-                showNotification('Messages closed', 'info');
-            }
-        } else {
-            // Create panel
-            messagesPanel = document.createElement('div');
-            messagesPanel.id = 'messages-panel';
-            messagesPanel.className = 'messages-panel';
-            
-            messagesPanel.innerHTML = `
-                <div class="messages-header">
-                    <h3>Messages</h3>
-                    <button class="messages-close"><i class="fas fa-times"></i></button>
-                </div>
-                <div class="messages-search">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search messages">
-                </div>
-                <div class="messages-tabs">
-                    <div class="messages-tab active">All</div>
-                    <div class="messages-tab">Unread</div>
-                    <div class="messages-tab">Requests</div>
-                </div>
-                <div class="messages-list">
-                    <div class="message-item unread">
-                        <img src="/api/placeholder/320/320" alt="Julia Lee">
-                        <div class="message-content">
-                            <div class="message-name">Julia Lee</div>
-                            <div class="message-text">Thanks for your help with the React issue!</div>
-                            <div class="message-time">2h ago</div>
-                        </div>
-                    </div>
-                    <div class="message-item">
-                        <img src="/api/placeholder/320/320" alt="Michael Wong">
-                        <div class="message-content">
-                            <div class="message-name">Michael Wong</div>
-                            <div class="message-text">Have you looked at the PR I submitted?</div>
-                            <div class="message-time">Yesterday</div>
-                        </div>
-                    </div>
-                    <div class="message-item unread">
-                        <img src="/api/placeholder/320/320" alt="Rachel Kim">
-                        <div class="message-content">
-                            <div class="message-name">Rachel Kim</div>
-                            <div class="message-text">I found a solution to your Redux problem!</div>
-                            <div class="message-time">3h ago</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="messages-compose">
-                    <input type="text" class="messages-input" placeholder="New message...">
-                    <button class="messages-send"><i class="fas fa-paper-plane"></i></button>
-                </div>
-            `;
-            
-            document.body.appendChild(messagesPanel);
-            
-            // Add event listeners for messages panel
-            const closeBtn = messagesPanel.querySelector('.messages-close');
-            closeBtn.addEventListener('click', function() {
-                messagesPanel.classList.add('hidden');
-                showNotification('Messages closed', 'info');
-            });
-            
-            const messageItems = messagesPanel.querySelectorAll('.message-item');
-            messageItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    const name = this.querySelector('.message-name').textContent;
-                    openChatWithUser(name);
-                });
-            });
-            
-            const messageTabs = messagesPanel.querySelectorAll('.messages-tab');
-            messageTabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    messageTabs.forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                    filterMessages(this.textContent.toLowerCase());
-                });
-            });
-            
-            const sendBtn = messagesPanel.querySelector('.messages-send');
-            const messageInput = messagesPanel.querySelector('.messages-input');
-            
-            sendBtn.addEventListener('click', function() {
-                sendMessage(messageInput.value);
-            });
-            
-            messageInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    sendMessage(this.value);
-                }
-            });
-            
-            // Focus on the input field
-            messageInput.focus();
-            
-            showNotification('Messages opened', 'info');
-        }
-    }
-    
-    function filterMessages(filter) {
-        const messagesPanel = document.getElementById('messages-panel');
-        if (!messagesPanel) return;
-        
-        const messageItems = messagesPanel.querySelectorAll('.message-item');
-        
-        messageItems.forEach(item => {
-            if (filter === 'all') {
-                item.style.display = 'flex';
-            } else if (filter === 'unread' && item.classList.contains('unread')) {
-                item.style.display = 'flex';
-            } else if (filter === 'requests' && item.classList.contains('request')) {
-                item.style.display = 'flex';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-        
-        showNotification(`Showing ${filter} messages`, 'info');
-    }
-    
-    function openChatWithUser(name) {
-        const messagesPanel = document.getElementById('messages-panel');
-        if (!messagesPanel) return;
-        
-        // Update panel to show chat interface
-        messagesPanel.innerHTML = `
-            <div class="messages-header">
-                <div class="chat-user-info">
-                    <button class="back-to-messages"><i class="fas fa-arrow-left"></i></button>
-                    <img src="/api/placeholder/320/320" alt="${name}">
-                    <div>${name}</div>
-                </div>
-                <button class="messages-close"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="chat-messages">
-                <div class="chat-date">Today</div>
-                <div class="chat-message received">
-                    <div class="chat-bubble">Hey there! How's your code project going?</div>
-                    <div class="chat-time">10:30 AM</div>
-                </div>
-                <div class="chat-message sent">
-                    <div class="chat-bubble">Working on it! I'm having some issues with the React hooks though.</div>
-                    <div class="chat-time">10:32 AM</div>
-                </div>
-                <div class="chat-message received">
-                    <div class="chat-bubble">I saw your post. The problem is in your dependency array. Let me help you fix it.</div>
-                    <div class="chat-time">10:35 AM</div>
-                </div>
-            </div>
-            <div class="chat-composer">
-                <button class="chat-attach"><i class="fas fa-paperclip"></i></button>
-                <input type="text" class="chat-input" placeholder="Type a message...">
-                <button class="chat-send"><i class="fas fa-paper-plane"></i></button>
-            </div>
-        `;
-        
-        // Add event listeners for chat interface
-        const backBtn = messagesPanel.querySelector('.back-to-messages');
-        backBtn.addEventListener('click', function() {
-            toggleMessagesPanel();
-        });
-        
-        const closeBtn = messagesPanel.querySelector('.messages-close');
-        closeBtn.addEventListener('click', function() {
-            messagesPanel.classList.add('hidden');
-            showNotification('Chat closed', 'info');
-        });
-        
-        const sendBtn = messagesPanel.querySelector('.chat-send');
-        const chatInput = messagesPanel.querySelector('.chat-input');
-        
-        sendBtn.addEventListener('click', function() {
-            sendChatMessage(chatInput.value);
-        });
-        
-        chatInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendChatMessage(this.value);
-            }
-        });
-        
-        // Focus on the input field
-        chatInput.focus();
-        
-        showNotification(`Chat with ${name} opened`, 'info');
-    }
-    
-    function sendChatMessage(message) {
-        if (!message.trim()) return;
-        
-        const chatMessages = document.querySelector('.chat-messages');
-        const chatInput = document.querySelector('.chat-input');
-        
-        // Create new message element
-        const newMessage = document.createElement('div');
-        newMessage.className = 'chat-message sent';
-        
-        const now = new Date();
-        const hours = now.getHours();
-        const minutes = now.getMinutes();
-        const timeStr = `${hours}:${minutes < 10 ? '0' + minutes : minutes} ${hours >= 12 ? 'PM' : 'AM'}`;
-        
-        newMessage.innerHTML = `
-            <div class="chat-bubble">${message}</div>
-            <div class="chat-time">${timeStr}</div>
-        `;
-        
-        // Add to chat
-        chatMessages.appendChild(newMessage);
-        
-        // Clear input
-        chatInput.value = '';
-        
-        // Scroll to bottom
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        
-        // Simulate response after a delay
-        setTimeout(() => {
-            const responseMessage = document.createElement('div');
-            responseMessage.className = 'chat-message received';
-            
-            responseMessage.innerHTML = `
-                <div class="chat-bubble">Thanks for your message! I'll get back to you soon.</div>
-                <div class="chat-time">${timeStr}</div>
-            `;
-            
-            chatMessages.appendChild(responseMessage);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }, 1500);
-    }
-    
-    function sendMessage(message) {
-        if (!message.trim()) return;
-        
-        const messageInput = document.querySelector('.messages-input');
-        
-        // Clear input
-        messageInput.value = '';
-        
-        showNotification('Message sent', 'success');
-    }
-
-    // Create Menu for Plus Button - NEW
-    function showCreateMenu(buttonElement) {
-        // Check if menu already exists
-        let createMenu = document.getElementById('create-menu');
-        
-        if (createMenu) {
-            // Toggle menu visibility
-            createMenu.classList.toggle('hidden');
-            return;
-        }
-        
-        // Get button position
-        const rect = buttonElement.getBoundingClientRect();
-        
-       
-    } })
-
-    document.addEventListener('DOMContentLoaded', function() {
-        // Theme toggle functionality
-        const themeToggle = document.getElementById('theme-toggle');
-        const body = document.body;
-        
-        themeToggle.addEventListener('click', function() {
-            body.classList.toggle('dark-mode');
-            const icon = themeToggle.querySelector('i');
-            
-            if (body.classList.contains('dark-mode')) {
-                icon.classList.replace('fa-moon', 'fa-sun');
-            } else {
-                icon.classList.replace('fa-sun', 'fa-moon');
-            }
-        });
-    
-        // Comments/messages section functionality
+        setupReactionSystem();
         setupCommentsSection();
-        
-        // Like button functionality
-        setupLikeButtons();
-        
-        // Request modification button functionality
         setupRequestButtons();
+        setupCodeActions();
+        setupPostMenu();
+        
+        isLoading = false;
+        showNotification('New posts loaded!', 'success');
+    }, 1500);
+}
+
+// User Profile System
+function setupUserProfile() {
+    const profileImg = document.querySelector('.profile-img');
+    if (!profileImg) return;
+    
+    profileImg.addEventListener('click', function() {
+        showUserProfileModal();
     });
+}
+
+function showUserProfileModal() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
     
-    function setupCommentsSection() {
-        // Find all comment buttons and add click event listeners
-        const commentButtons = document.querySelectorAll('[id^="comment-btn-"]');
-        
-        commentButtons.forEach(button => {
-            const postId = button.id.split('-').pop();
-            const commentsSection = document.getElementById(`comments-${postId}`);
-            
-            button.addEventListener('click', function() {
-                // Toggle comments section visibility
-                if (commentsSection.style.display === 'none') {
-                    commentsSection.style.display = 'block';
-                    this.classList.add('active');
-                } else {
-                    commentsSection.style.display = 'none';
-                    this.classList.remove('active');
-                }
-            });
-            
-            // Setup comment submission for this post
-            setupCommentSubmit(postId);
-        });
-    }
-    
-    function setupCommentSubmit(postId) {
-        const commentsSection = document.getElementById(`comments-${postId}`);
-        const commentForm = commentsSection.querySelector('.comment-form');
-        const commentInput = commentForm.querySelector('.comment-input');
-        const submitButton = commentForm.querySelector('.comment-submit');
-        
-        // Handle submit button click
-        submitButton.addEventListener('click', function() {
-            submitComment(postId, commentInput.value);
-        });
-        
-        // Handle pressing Enter in the input field
-        commentInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                submitComment(postId, commentInput.value);
-            }
-        });
-    }
-    
-    function submitComment(postId, commentText) {
-        if (!commentText.trim()) return; // Don't submit empty comments
-        
-        const commentsSection = document.getElementById(`comments-${postId}`);
-        const commentInput = commentsSection.querySelector('.comment-input');
-        
-        // Create new comment element
-        const newComment = document.createElement('div');
-        newComment.className = 'comment';
-        newComment.innerHTML = `
-            <img src="/api/placeholder/320/320" alt="Your profile">
-            <div class="comment-content">
-                <div class="comment-user">You</div>
-                <div class="comment-text">${escapeHTML(commentText)}</div>
-                <div class="comment-actions">
-                    <div class="comment-action">Like</div>
-                    <div class="comment-action">Reply</div>
-                    <div class="comment-action">Just now</div>
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-header">
+            <h3>Your Profile</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="profile-header">
+                <img src="../static/images/user.png" alt="Profile" class="profile-large">
+                <div class="profile-info">
+                    <h4>Your Name</h4>
+                    <p>Software Developer</p>
+                    <div class="profile-stats">
+                        <div class="stat">
+                            <span class="stat-number">42</span>
+                            <span class="stat-label">Posts</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">128</span>
+                            <span class="stat-label">Comments</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">24</span>
+                            <span class="stat-label">Solutions</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-        `;
-        
-        // Insert new comment before the next comment form
-        commentsSection.appendChild(newComment);
-        
-        // Clear the input field
-        commentInput.value = '';
-        
-        // Update comment count in post stats
-        updateCommentCount(postId, 1);
-    }
+            <div class="profile-actions">
+                <button class="profile-action-btn"><i class="fas fa-user-edit"></i> Edit Profile</button>
+                <button class="profile-action-btn"><i class="fas fa-cog"></i> Settings</button>
+                <button class="profile-action-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </div>
+    `;
     
-    function updateCommentCount(postId, increment) {
-        const postCard = document.getElementById(`comments-${postId}`).closest('.post-card');
-        const statsDiv = postCard.querySelector('.post-stats div:first-child');
-        
-        // Parse the current stats text
-        const statsText = statsDiv.textContent;
-        const commentCountMatch = statsText.match(/(\d+) Comments/);
-        
-        if (commentCountMatch) {
-            const currentCount = parseInt(commentCountMatch[1]);
-            const newCount = currentCount + increment;
-            
-            // Replace the old count with the new count
-            statsDiv.textContent = statsText.replace(
-                `${currentCount} Comments`, 
-                `${newCount} Comments`
-            );
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    const closeModal = () => {
+        overlay.classList.add('hiding');
+        setTimeout(() => overlay.remove(), 300);
+    };
+    
+    modal.querySelector('.modal-close').addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => e.target === overlay && closeModal());
+    
+    addProfileModalStyles();
+    
+    setTimeout(() => {
+        overlay.classList.add('showing');
+        modal.style.transform = 'scale(1)';
+    }, 10);
+}
+
+function addProfileModalStyles() {
+    if (document.getElementById('profile-modal-styles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'profile-modal-styles';
+    style.textContent = `
+        .profile-large {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent-color);
+            margin-right: 20px;
         }
-    }
-    
-    function setupLikeButtons() {
-        const likeButtons = document.querySelectorAll('[id^="like-btn-"]');
         
-        likeButtons.forEach(button => {
-            const postId = button.id.split('-').pop();
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .profile-info h4 {
+            margin: 0 0 5px 0;
+            font-size: 20px;
+            color: var(--text-primary);
+        }
+        
+        .profile-info p {
+            margin: 0 0 15px 0;
+            color: var(--text-secondary);
+        }
+        
+        .profile-stats {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-number {
+            display: block;
+            font-weight: 600;
+            font-size: 18px;
+            color: var(--accent-color);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .profile-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .profile-action-btn {
+            padding: 10px;
+            border-radius: 6px;
+            background-color: var(--accent-purple);
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.2s;
+        }
+        
+        .profile-action-btn:hover {
+            background-color: var(--accent-color);
+            color: var(--dark-purple);
+        }
+        
+        .profile-action-btn i {
+            margin-right: 8px;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Follow System
+function setupFollowButtons() {
+    document.querySelectorAll('.follow-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const isFollowing = this.textContent.trim() === 'Following';
+            this.textContent = isFollowing ? 'Follow' : 'Following';
+            this.style.backgroundColor = isFollowing ? 'var(--accent-color)' : 'var(--border-color)';
             
-            button.addEventListener('click', function() {
-                const icon = this.querySelector('i');
-                
-                if (icon.classList.contains('far')) {
-                    // Like the post
-                    icon.classList.replace('far', 'fas');
-                    this.classList.add('active');
-                    updateLikeCount(postId, 1);
-                } else {
-                    // Unlike the post
-                    icon.classList.replace('fas', 'far');
-                    this.classList.remove('active');
-                    updateLikeCount(postId, -1);
-                }
+            const userName = this.closest('.contributor').querySelector('.contributor-name').textContent;
+            showNotification(isFollowing ? `Unfollowed ${userName}` : `Following ${userName}`, 'info');
+        });
+    });
+}
+
+// Post Menu System
+function setupPostMenu() {
+    document.querySelectorAll('.post-menu').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            // Remove any existing post menus
+            document.querySelectorAll('.post-options-menu').forEach(menu => menu.remove());
+            
+            const postCard = this.closest('.post-card');
+            const menu = document.createElement('div');
+            menu.className = 'post-options-menu';
+            menu.innerHTML = `
+                <button class="post-option"><i class="fas fa-bookmark"></i> Save Post</button>
+                <button class="post-option"><i class="fas fa-flag"></i> Report Post</button>
+                <button class="post-option"><i class="fas fa-link"></i> Copy Link</button>
+                <button class="post-option"><i class="fas fa-eye-slash"></i> Hide Post</button>
+            `;
+            
+            postCard.appendChild(menu);
+            
+            // Position menu near the button
+            const rect = this.getBoundingClientRect();
+            menu.style.top = `${rect.bottom + window.scrollY}px`;
+            menu.style.right = `${window.innerWidth - rect.right}px`;
+            
+            // Close menu when clicking outside
+            const closeMenu = () => menu.remove();
+            setTimeout(() => {
+                document.addEventListener('click', closeMenu, { once: true });
+            }, 100);
+            
+            // Add option click handlers
+            menu.querySelectorAll('.post-option').forEach(option => {
+                option.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = option.textContent.trim();
+                    showNotification(`${action} action performed`, 'info');
+                    closeMenu();
+                });
             });
         });
-    }
+    });
     
-    function updateLikeCount(postId, increment) {
-        const commentsSection = document.getElementById(`comments-${postId}`);
-        const postCard = commentsSection.closest('.post-card');
-        const statsDiv = postCard.querySelector('.post-stats div:first-child');
-        
-        // Parse the current stats text
-        const statsText = statsDiv.textContent;
-        const likeCountMatch = statsText.match(/(\d+) Likes/);
-        
-        if (likeCountMatch) {
-            const currentCount = parseInt(likeCountMatch[1]);
-            const newCount = currentCount + increment;
-            
-            // Replace the old count with the new count
-            statsDiv.textContent = statsText.replace(
-                `${currentCount} Likes`, 
-                `${newCount} Likes`
-            );
+    addPostMenuStyles();
+}
+
+function addPostMenuStyles() {
+    if (document.getElementById('post-menu-styles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'post-menu-styles';
+    style.textContent = `
+        .post-options-menu {
+            position: absolute;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.2s ease;
         }
-    }
-    
-    function setupRequestButtons() {
-        const requestButtons = document.querySelectorAll('[id^="request-btn-"]');
         
-        requestButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                // Simple modal or alert for demonstration
-                alert("Feature coming soon: You'll be able to request specific code modifications here!");
-            });
-        });
-    }
+        .post-option {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            width: 100%;
+            background: none;
+            border: none
+                        text-align: left;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .post-option:hover {
+            background-color: var(--accent-purple);
+        }
+        
+        .post-option i {
+            margin-right: 8px;
+            width: 20px;
+            text-align: center;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Theme Toggle
+function setupThemeToggle() {
+    const toggle = document.getElementById('themeToggle');
+    if (!toggle) return;
     
-    // Helper function to escape HTML to prevent XSS
-    function escapeHTML(str) {
-        return str
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+    toggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-theme');
+        const icon = toggle.querySelector('i');
+        icon.classList.toggle('fa-moon');
+        icon.classList.toggle('fa-sun');
+        
+        // Save theme preference to localStorage
+        const isDark = document.body.classList.contains('dark-theme');
+        localStorage.setItem('codecritic-theme', isDark ? 'dark' : 'light');
+        showNotification(`Switched to ${isDark ? 'dark' : 'light'} theme`, 'info');
+    });
+    
+    // Check for saved theme preference
+    const savedTheme = localStorage.getItem('codecritic-theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+        const icon = toggle.querySelector('i');
+        icon.classList.remove('fa-moon');
+        icon.classList.add('fa-sun');
     }
+}
+
+// Post Form
+function setupPostForm() {
+    const postForm = document.querySelector('.post-form');
+    const postInput = document.querySelector('.post-input');
+    const postButton = document.querySelector('.post-btn');
+
+    postInput.addEventListener('focus', () => postForm.classList.add('active'));
+    postInput.addEventListener('blur', () => {
+        if (!postInput.value.trim()) postForm.classList.remove('active');
+    });
+
+    postButton.addEventListener('click', () => {
+        if (postInput.value.trim()) {
+            createNewPost(postInput.value.trim());
+            postInput.value = '';
+            postForm.classList.remove('active');
+        } else {
+            showNotification('Please write something before posting', 'error');
+        }
+    });
+}
+
+function createNewPost(content) {
+    const postContainer = document.querySelector('.feed');
+    const newPost = document.createElement('div');
+    newPost.className = 'post-card';
+    newPost.innerHTML = `
+        <div class="post-header">
+            <div class="user-info">
+                <img src="../static/images/user.png" alt="Your profile">
+                <div class="user-text">
+                    <div class="user-name">You</div>
+                    <div class="post-meta">
+                        <span>Developer</span>
+                        <span class="dot">•</span>
+                        <span>Just now</span>
+                        <span class="post-tag">General</span>
+                    </div>
+                </div>
+            </div>
+            <button class="post-menu"><i class="fas fa-ellipsis-h"></i></button>
+        </div>
+        <div class="post-content">
+            <p>${escapeHTML(content)}</p>
+        </div>
+        <div class="post-stats">
+            <div>0 Likes • 0 Comments • 0 Requests</div>
+            <div>Viewed 0 times</div>
+        </div>
+        <div class="post-actions-menu">
+            <button class="action-btn" id="like-btn-new">
+                <i class="far fa-thumbs-up"></i> Like
+            </button>
+            <button class="action-btn" id="comment-btn-new">
+                <i class="far fa-comment"></i> Comment
+            </button>
+            <button class="action-btn" id="request-btn-new">
+                <i class="far fa-edit"></i> Request modification
+            </button>
+        </div>
+        <div class="comments-section" id="comments-new" style="display: none;">
+            <div class="comment-form">
+                <img src="/api/placeholder/320/320" alt="Your profile">
+                <div class="comment-input-container">
+                    <input type="text" class="comment-input" placeholder="Write a comment...">
+                    <button class="comment-submit"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    postContainer.insertBefore(newPost, postContainer.firstChild.nextSibling);
+    
+    setupReactionSystem();
+    setupCommentsSection();
+    setupRequestButtons();
+    setupCodeActions();
+    setupPostMenu();
+    
+    showNotification('Post shared successfully!', 'success');
+}
+
+// Search Functionality
+function setupSearch() {
+    const searchInput = document.querySelector('.search-bar input');
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const term = searchInput.value.trim();
+            if (term) {
+                showNotification(`Searching for "${term}"`, 'info');
+                searchInput.value = '';
+            }
+        }
+    });
+}
+
+// Navigation
+function setupNavigation() {
+    document.querySelectorAll('.nav-links a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.nav-links a').forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+            showNotification(`Switched to ${link.textContent.trim()}`, 'info');
+        });
+    });
+}
+
+// Sidebar Menu
+function setupSidebarMenu() {
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            showNotification(`Navigated to ${item.textContent.trim()}`, 'info');
+        });
+    });
+}
+
+// Helper Functions
+function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// Initialize post filtering on page load
+function setupPostFiltering() {
+    const activeTab = document.querySelector('.filter-tab.active');
+    if (activeTab) {
+        filterPosts(activeTab.textContent.trim());
+    }
+}
