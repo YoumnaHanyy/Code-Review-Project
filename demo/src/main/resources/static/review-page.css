@@ -12,6 +12,26 @@
     --border-color: #30363d;
 }
 
+[data-theme="light"] {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #0f172a;
+    --muted: #475569;
+    --primary: #2563eb;
+    --light-purple: #ffffff;
+    --dark-purple: #0d1117;
+    --accent-purple: #252a65;
+    --text-primary: #000000;
+    --text-secondary: #a0a0a0;
+    --accent-color: #7c81ff;
+    --success-color: #4ade80;
+    --warning-color: #fbbf24;
+    --danger-color: #f87171;
+    --card-bg: #eaeaea;
+    --border-color: #30363d;
+    --primary-hover: #1d4ed8;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
 * {
     margin: 0;
     padding: 0;

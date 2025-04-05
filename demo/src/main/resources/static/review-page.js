@@ -1495,7 +1495,103 @@ function setupSidebarMenu() {
         });
     });
 }
+document.addEventListener('DOMContentLoaded', function() {
+    // Theme toggling functionality
+    initializeThemeToggle();
+    
+    // Tab switching functionality
+    initializeTabSwitching();
+    
+    // Filter and search functionality
+    initializeSearchAndFilter();
+    
+    // PR actions (hover effects, clicks)
+    initializePRActions();
+    
+    // Initialize charts (placeholder)
+    initializeCharts();
+});
 
+/**
+ * Initialize theme toggle functionality
+ */
+function initializeThemeToggle() {
+    const themeToggle = document.getElementById('themeToggle');
+    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    // Check for saved theme preference or use system preference
+    const currentTheme = localStorage.getItem('theme') || 
+                        (prefersDarkScheme.matches ? 'dark' : 'light');
+    
+    // Set initial theme
+    if (currentTheme === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    }
+    
+    // Toggle theme on click
+    themeToggle.addEventListener('click', function() {
+        let theme;
+        
+        if (document.body.getAttribute('data-theme') === 'dark') {
+            document.body.removeAttribute('data-theme');
+            themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            theme = 'light';
+        } else {
+            document.body.setAttribute('data-theme', 'dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            theme = 'dark';
+        }
+        
+        // Save preference
+        localStorage.setItem('theme', theme);
+    });
+}
+function applyTheme() {
+    const theme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', theme);
+    themeToggle.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+  }
+
+  themeToggle.addEventListener('click', () => {
+    const current = localStorage.getItem('theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('theme', next);
+    applyTheme();
+  });
+
+
+/**
+ * Initialize tab switching functionality
+ */
+function initializeTabSwitching() {
+    const tabButtons = document.querySelectorAll('.tabs button');
+    const prItems = document.querySelectorAll('.pr-item');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Get the tab type from the button text
+            const tabType = this.textContent.trim().split(' ')[0].toLowerCase();
+            
+            // Filter PR items based on the tab type
+            prItems.forEach(item => {
+                if (tabType === 'all') {
+                    item.style.display = 'flex';
+                } else if (item.classList.contains(tabType.toLowerCase())) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+}
 // Helper Functions
 function escapeHTML(str) {
     const div = document.createElement('div');
