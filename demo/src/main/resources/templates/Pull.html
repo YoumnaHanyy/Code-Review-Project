@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pull Requests · CodeCritic</title>
+    <link rel="stylesheet" href="../static/Pull.css">
+</head>
+<body>
+
+
+    
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h2>Pull Requests</h2>
+            <button class="new-pr-btn">New pull request</button>
+        </div>
+
+        <!-- Status Filter Bar -->
+        <div class="status-filter">
+            <button class="status-btn active" id="filterAll"><span class="status-circle all"></span>All PRs <span class="count">5</span></button>
+            <button class="status-btn" id="filterApproved"><span class="status-circle approved"></span>Approved <span class="count">2</span></button>
+            <button class="status-btn" id="filterPending"><span class="status-circle pending"></span>Pending <span class="count">1</span></button>
+            <button class="status-btn" id="filterChanges"><span class="status-circle changes"></span>Changes <span class="count">1</span></button>
+            <button class="status-btn" id="filterRejected"><span class="status-circle rejected"></span>Rejected <span class="count">1</span></button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <input type="text" id="search" placeholder="🔍 Search pull requests">
+            <button id="searchButton">Search</button>
+        </div>
+
+        <!-- PR List -->
+        <ul class="pr-list" id="prList">
+            <!-- PRs will be dynamically added here -->
+        </ul>
+    </div>
+
+    <script src="../static/Pull.js"></script>
+</body>
+</html>
