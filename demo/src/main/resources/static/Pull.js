@@ -322,6 +322,16 @@ function updateStatusCounts() {
     document.querySelector("#filterChanges .count").textContent = counts.changes;
     document.querySelector("#filterRejected .count").textContent = counts.rejected;
 }
+function setupNavigation() {
+    document.querySelectorAll('.nav-links a').forEach(link => {
+        link.addEventListener('click', () => {
+            document.querySelectorAll('.nav-links a').forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+            showNotification(`Switched to ${link.textContent.trim()}`, 'info');
+            // Let the link navigate naturally
+        });
+    });
+}
 
 // Initialize the UI
 updateStatusCounts();
