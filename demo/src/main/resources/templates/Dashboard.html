@@ -9,7 +9,32 @@
 </head>
 <body>
   
-      
+  <header>
+    <div class="header-container">
+        <a href="#" class="logo">
+            <i class="fas fa-code"></i>
+            CodeCritic
+        </a>
+        <div class="search-container">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search for code, developers, languages...">
+            </div>
+        </div>
+        <div class="nav-links">
+            <a href="/review" class="active"><i class="fas fa-home"></i> Feed</a>
+            <a href="/dashboard"><i class="fas fa-bell"></i> Dashboard</a>
+            <a href="#"><i class="fas fa-user-friends"></i> Network</a>
+            <a href="/pull"><i class="fas fa-code-branch"></i> Pull Requests</a>
+            <a href="#"><i class="fas fa-code"></i> Reviews</a>
+
+        </div>
+        <div class="user-actions">
+            <img src="images/user.png" alt="Profile" class="profile-img">
+            <div class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>            </div>
+    </div>
+</header>  
         <div class="container page-content">
           <div class="greeting">
             <h1><i class="fas fa-chart-line"></i> Dashboard Overview</h1>
@@ -127,7 +152,11 @@
               <div class="pr-actions">
                 <div class="action success"><i class="fas fa-check"></i></div>
                 <div class="action danger"><i class="fas fa-times"></i></div>
-                <div class="action"><i class="fas fa-eye"></i></div>
+                <a href="/merge">
+                  <div class="action">
+                      <i class="fas fa-eye"></i>
+                  </div>
+              </a>
               </div>
             </div>
       

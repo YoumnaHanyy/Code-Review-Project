@@ -23,23 +23,7 @@ public class AuthController {
     }
 
     // Review page (unprotected)
-    @GetMapping("/review")
-    public String review() {
-        return "review"; // maps to review.html
-    }
-
-    // Dashboard (protected)
-    @GetMapping("/dashboard")
-    public String dashboard(HttpSession session, Model model) {
-        User user = (User) session.getAttribute("loggedInUser");
-
-        if (user == null) {
-            return "Dashboard"; // must be logged in
-        }
-
-        model.addAttribute("user", user); // so you can say "Welcome, user!"
-        return "Dashboard"; // maps to Dashboard.html
-    }
+ 
 
     // Show signup form
     @GetMapping("/signup")
@@ -75,7 +59,15 @@ public class AuthController {
                         HttpSession session) {
 
         System.out.println(">>> Login form submitted for: " + email);
+ // Static email and password for admin check
+ String adminEmail = "admin@example.com";
+ String adminPassword = "admin123";
 
+ // Check if the login credentials match the admin credentials
+ if (email.equals(adminEmail) && password.equals(adminPassword)) {
+     session.setAttribute("loggedInUser", "admin");
+     return "redirect:/admin"; // Redirect to admin page
+ }
         User user = authService.login(email, password);
         if (user != null) {
             // ✅ Save user to session
@@ -84,7 +76,7 @@ public class AuthController {
             // Optional: show welcome message
             model.addAttribute("message", "✅ Login successful. Welcome, " + user.getUsername() + "!");
 
-            return "review";
+            return "review"; // Redirecting to review page after login
         }
 
         model.addAttribute("error", "❌ Invalid email or password.");
@@ -96,5 +88,45 @@ public class AuthController {
     public String logout(HttpSession session) {
         session.invalidate(); // clears session
         return "redirect:/login";
+    }
+
+    @GetMapping("/review")
+    public String review(HttpSession session) {
+        if (session.getAttribute("loggedInUser") == null) {
+            return "redirect:/login"; // Redirect to login if not logged in
+        }
+        return "review"; // Return the dashboard view
+    }
+    // Protected Route (e.g. Dashboard)
+    @GetMapping("/dashboard")
+    public String dashboard(HttpSession session) {
+        if (session.getAttribute("loggedInUser") == null) {
+            return "redirect:/login"; // Redirect to login if not logged in
+        }
+        return "Dashboard"; // Return the dashboard view
+    }
+    @GetMapping("/merge")
+    public String merge(HttpSession session) {
+        if (session.getAttribute("loggedInUser") == null) {
+            return "redirect:/login"; // Redirect to login if not logged in
+        }
+        return "merge"; // Return the dashboard view
+    }
+
+
+    @GetMapping("/admin")
+    public String adminPage(HttpSession session) {
+        if (session.getAttribute("loggedInUser") == null || !session.getAttribute("loggedInUser").equals("admin")) {
+            return "redirect:/login"; // Redirect to login if not logged in or not admin
+        }
+        return "admin"; // Return the admin page view
+    }
+    // Another protected route, like pulling or viewing profile
+    @GetMapping("/pull")
+    public String pull(HttpSession session) {
+        if (session.getAttribute("loggedInUser") == null) {
+            return "redirect:/login"; // Redirect to login if not logged in
+        }
+        return "pull"; // Return the pull page view
     }
 }

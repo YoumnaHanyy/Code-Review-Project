@@ -10,25 +10,31 @@
 <body>
   <header>
     <div class="nav">
-     
-      <h2>CodeCritic</h2>
+        <h2>CodeCritic</h2>
 
-      <nav>
-        <ul>
-          <li>Product</li>
-          <li>Solutions</li>
-          <li>Resources</li>
-          <li>Open Source</li>
-          <li>Enterprise</li>
-          <li>Pricing</li>
-        </ul>
-      </nav>
-      <div class="auth">
-        <a href="login.html">Sign in</a>
-        <a href="signup.html">Sign Up</a>
-      </div>
+        <nav>
+            <ul>
+                
+              <li th:if="${session.loggedInUser != null}">
+                <a href="/review">Home Feed</a>
+            </li>
+                <li>Resources</li>
+                <li>Open Source</li>
+                <li>Enterprise</li>
+                <li>Pricing</li>
+            </ul>
+        </nav>
+
+        <div class="auth">
+            <!-- Show "Sign in" and "Sign Up" if the user is NOT logged in -->
+            <a href="/login" th:unless="${session.loggedInUser != null}">Sign in</a>
+            <a href="/signup" th:unless="${session.loggedInUser != null}">Sign Up</a>
+            
+            <!-- Show "Logout" if the user IS logged in, and replace the sign-in/signup buttons -->
+            <a href="/logout" th:if="${session.loggedInUser != null}">Logout</a>
+        </div>
     </div>
-  </header>
+</header>
 
   <section class="hero">
     <h1>Build and ship software on a<br><span>single, collaborative platform</span></h1>
@@ -36,8 +42,8 @@
     <div class="cta">
         <div class="hero-glow"></div>
       <input type="email" placeholder="Enter your email">
-      <button class="green">Sign up for GitHub</button>
-      <button class="dark">Try GitHub Copilot</button>
+      <button class="green">Sign up for CodeCritic</button>
+      
     </div>
     
 
