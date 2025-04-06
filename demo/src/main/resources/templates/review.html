@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CodeCritic - Social Code Reviews</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../static/review-page.css">
+    <link rel="stylesheet" href="css/review.css">
 </head>
 <body>
     <header>
@@ -21,19 +21,20 @@
                 </div>
             </div>
             <div class="nav-links">
-                <a href="review.html" class="active"><i class="fas fa-home"></i> Feed</a>
-                <a href="Dashboard.html"><i class="fas fa-bell"></i> Dashboard</a>
+                <a href="/review" class="active"><i class="fas fa-home"></i> Feed</a>
+                <a href="/dashboard"><i class="fas fa-bell"></i> Dashboard</a>
                 <a href="#"><i class="fas fa-user-friends"></i> Network</a>
                 <a href="Pull.html"><i class="fas fa-code-branch"></i> Pull Requests</a>
                 <a href="#"><i class="fas fa-code"></i> Reviews</a>
-
+    
             </div>
             <div class="user-actions">
-                <img src="../static/images/user.png" alt="Profile" class="profile-img">
+                <img src="images/user.png" alt="Profile" class="profile-img">
                 <div class="theme-toggle" id="themeToggle">
                     <i class="fas fa-moon"></i>            </div>
         </div>
     </header>
+   
 
     <div class="container">
         <div class="main-container">
@@ -94,7 +95,7 @@
             <div class="feed">
                 <div class="post-form">
                     <div class="form-header">
-                        <img src="../static/images/user.png" alt="Profile">
+                        <img src="images/user.png" alt="Profile">
                         <div>Share your code challenge</div>
                     </div>
                     <textarea class="post-input" placeholder="What code are you stuck on?"></textarea>
@@ -119,7 +120,7 @@
                 <div class="post-card">
                     <div class="post-header">
                         <div class="user-info">
-                            <img src="../static/images/woman (2).png" alt="Sarah Chen">
+                            <img src="images/woman (2).png" alt="Sarah Chen">
                             <div class="user-text">
                                 <div class="user-name">Sarah Chen</div>
                                 <div class="post-meta">
@@ -242,7 +243,7 @@
                 <div class="post-card">
                     <div class="post-header">
                         <div class="user-info">
-                            <img src="../static/images/man (1).png" alt="Alex Rodriguez">
+                            <img src="images/man (1).png" alt="Alex Rodriguez">
                             <div class="user-text">
                                 <div class="user-name">Alex Rodriguez</div>
                                 <div class="post-meta">
@@ -342,21 +343,21 @@
                 <div class="sidebar-section">
                     <h3>Top Contributors</h3>
                     <div class="contributor">
-                        <img src="../static/images/woman.png" alt="Julia Lee">
+                        <img src="images/woman.png" alt="Julia Lee">
                         <div class="contributor-info">
                             <div class="contributor-name">Julia Lee</div>
                             <div class="contributor-level">Senior Developer</div>
                         </div>
                     </div>
                     <div class="contributor">
-                        <img src="../static/images/man.png" alt="Michael Wong">
+                        <img src="images/man.png" alt="Michael Wong">
                         <div class="contributor-info">
                             <div class="contributor-name">Michael Wong</div>
                             <div class="contributor-level">Full Stack Engineer</div>
                         </div>
                     </div>
                     <div class="contributor">
-                        <img src="../static/images/woman (1).png" alt="Rachel Kim">
+                        <img src="images/woman (1).png" alt="Rachel Kim">
                         <div class="contributor-info">
                             <div class="contributor-name">Rachel Kim</div>
                             <div class="contributor-level">React Specialist</div>
@@ -377,7 +378,7 @@
             </div>
         </div>
     </div>
-
-    <script src="../static/review-page.js"></script>
+   
+    <script src="js/review.js"></script>
 </body>
 </html>

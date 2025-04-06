@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Sign Up</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #101341;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        
+        .logo img {
+            height: 24px;
+            margin-right: 5px;
+        }
+        
+        .language-selector {
+            color: white;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .language-selector img {
+            height: 16px;
+            margin-right: 5px;
+        }
+        
+        .profile-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #f0f0f0;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #003142;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            padding-bottom: 80px;
+        }
+        
+        .logo-large {
+            margin-bottom: 20px;
+        }
+        
+        .logo-large img {
+            height: 60px;
+        }
+        
+        h1 {
+            color: white;
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: normal;
+        }
+        
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .signup-form {
+            width: 100%;
+            max-width: 360px;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .terms {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .checkbox {
+            margin-right: 8px;
+            margin-top: 3px;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            background-color: transparent;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .checkbox:checked {
+            background-color: #00e676;
+            border-color: #00e676;
+        }
+        
+        .checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 5px;
+            height: 9px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        
+        .signup-btn {
+            width: 100%;
+            padding: 12px;
+            background: #9884c4;
+            border: none;
+            border-radius: 5px;
+            color: #003142;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .login-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .login-link a {
+            color: #00e676;
+            text-decoration: none;
+        }
+        
+        .background-dots {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+        
+        .wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 100% 100% 0 0 / 200% 200% 0 0;
+        }
+        
+        .wave-2 {
+            bottom: -40px;
+            height: 70px;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .error-message {
+            color: #ff3b30;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-dots" id="dots"></div>
+    
+    <div class="header">
+        <div class="logo">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMGU2NzYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTggOGE2IDYgMCAwIDAtOS4zMyA1aDEwLjQ0QTYgNiAwIDAgMCAxOCA4eiI+PC9wYXRoPjxwYXRoIGQ9Ik0xOC4zMSAxOGE2IDYgMCAwIDEtMTAuNjIgMEgxOC4zMXoiPjwvcGF0aD48bGluZSB4MT0iMiIgeTE9IjEyIiB4Mj0iMjIiIHkyPSIxMiI+PC9saW5lPjwvc3ZnPg==" alt="R">
+            <span>ecruitify</span>
+        </div>
+        
+        <div style="display: flex; align-items: center;">
+            <div class="language-selector">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDUuOTZBOC45NzUgOC45NzUgMCAwIDAgMTkgMjBjMS4yODIgMCAyLjUtLjI5IDMuNTczLS44MTIiPjwvcGF0aD48cGF0aCBkPSJNMTkgMjF2LTFhMiAyIDAgMCAwLTItMkg3YTIgMiAwIDAgMC0yIDJ2MSI+PC9wYXRoPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTEiIHI9IjQiPjwvY2lyY2xlPjwvc3ZnPg==" alt="UK flag">
+                <span>EN</span>
+            </div>
+            <div class="profile-icon" style="margin-left: 15px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="logo-large">
+            <svg xmlns="http://www.w3.org/2000/svg" width="60"  height="60" viewBox="0 0 24 24" fill="none" stroke="#9884c4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M18 8a6 6 0 0 0-9.33 5h10.44A6 6 0 0 0 18 8z"></path><path d="M18.31 18a6 6 0 0 1-10.62 0H18.31z"></path><line x1="2" y1="12" x2="22" y2="12"></line></svg>
+        </div>
+        
+        <h1>Sign Up</h1>
+        <p class="subtitle">Create your account and start managing candidates!</p>
+        
+        <p th:if="${error}" th:text="${error}" class="error-message"></p>
+        
+        <form th:action="@{/signup}" method="post" th:object="${user}" class="signup-form">
+            <input type="text" class="input-field" th:field="*{username}" placeholder="Username" required>
+            <input type="email" class="input-field" th:field="*{email}" placeholder="Email" required>
+            <input type="password" class="input-field" th:field="*{password}" placeholder="Password" required>
+            
+            <label class="terms">
+                <input type="checkbox" class="checkbox" name="terms" required>
+                <span>I agree to the <a href="#" style="color: #00e676; text-decoration: none;">Terms of Service</a> and <a href="#" style="color: #00e676; text-decoration: none;">Privacy Policy</a></span>
+            </label>
+            
+            <button type="submit" class="signup-btn">Register</button>
+            
+            <p class="login-link">Already have an account? <a th:href="@{/login}">Login</a></p>
+        </form>
+    </div>
+    
+    <div class="wave"></div>
+    <div class="wave wave-2"></div>
+    
+    <script>
+        // Create background dots
+        const dotsContainer = document.getElementById('dots');
+        for (let i = 0; i < 40; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.style.left = `${Math.random() * 100}%`;
+            dot.style.top = `${Math.random() * 100}%`;
+            dot.style.opacity = Math.random() * 0.5;
+            dotsContainer.appendChild(dot);
+        }
+    </script>
+</body>
+</html>

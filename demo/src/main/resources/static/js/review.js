@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all systems
     setupReactionSystem();
@@ -1473,16 +1474,8 @@ function setupSearch() {
 }
 
 // Navigation
-function setupNavigation() {
-    document.querySelectorAll('.nav-links a').forEach(link => {
-        link.addEventListener('click', () => {
-            document.querySelectorAll('.nav-links a').forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-            showNotification(`Switched to ${link.textContent.trim()}`, 'info');
-            // Let the link navigate naturally
-        });
-    });
-}
+
+
 
 // Sidebar Menu
 function setupSidebarMenu() {
